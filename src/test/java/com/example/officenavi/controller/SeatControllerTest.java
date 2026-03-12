@@ -30,8 +30,7 @@ class SeatControllerTest {
     void getSeats_shouldReturn200AndSeatList() throws Exception {
         when(seatService.getSeats()).thenReturn(List.of(
                 new SeatResponse(10, "A-01", "3F North"),
-                new SeatResponse(11, "A-02", "3F East")
-        ));
+                new SeatResponse(11, "A-02", "3F East")));
 
         mockMvc.perform(get("/api/seats"))
                 .andExpect(status().isOk())
@@ -39,7 +38,6 @@ class SeatControllerTest {
                 .andExpect(jsonPath("$[0].name").value("A-01"))
                 .andExpect(jsonPath("$[0].location").value("3F North"))
                 .andExpect(jsonPath("$[1].location").value("3F East"));
-                
-                
+
     }
 }

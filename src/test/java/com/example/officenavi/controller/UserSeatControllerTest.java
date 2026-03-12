@@ -44,8 +44,7 @@ class UserSeatControllerTest {
     @Test
     void registerCurrentSeat_shouldReturn201() throws Exception {
         when(userSeatService.registerCurrentSeat(any())).thenReturn(
-                new UserSeatRegisterResponse(100, 1, 10, LocalDateTime.of(2026, 3, 3, 10, 5, 0))
-        );
+                new UserSeatRegisterResponse(100, 1, 10, LocalDateTime.of(2026, 3, 3, 10, 5, 0)));
 
         String body = """
                 {
@@ -55,8 +54,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.userSeatId").value(100))
                 .andExpect(jsonPath("$.seatId").value(10));
@@ -65,8 +64,7 @@ class UserSeatControllerTest {
     @Test
     void leaveCurrentSeat_shouldReturn200() throws Exception {
         when(userSeatService.leaveCurrentSeat(any())).thenReturn(
-                new UserSeatLeaveResponse(1, LocalDateTime.of(2026, 3, 3, 10, 20, 0))
-        );
+                new UserSeatLeaveResponse(1, LocalDateTime.of(2026, 3, 3, 10, 20, 0)));
 
         String body = """
                 {
@@ -75,8 +73,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats/leave")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(1));
     }
@@ -87,8 +85,7 @@ class UserSeatControllerTest {
                 1,
                 "山田太郎",
                 new UserCurrentSeatResponse.SeatInfo(10, "A-01", "3F East"),
-                LocalDateTime.of(2026, 3, 3, 10, 5, 0)
-        );
+                LocalDateTime.of(2026, 3, 3, 10, 5, 0));
         when(userSeatService.getCurrentSeat(1)).thenReturn(response);
 
         mockMvc.perform(get("/api/users/1/current-seat"))
@@ -102,8 +99,8 @@ class UserSeatControllerTest {
         String body = "{}";
 
         mockMvc.perform(post("/api/user-seats/leave")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("validation error"))
                 .andExpect(jsonPath("$.errors[0].field").value("userId"));
@@ -112,7 +109,8 @@ class UserSeatControllerTest {
     @Test
     void getCurrentSeat_whenNotFound_shouldReturn404() throws Exception {
         when(userSeatService.getCurrentSeat(999))
-                .thenThrow(new ResourceNotFoundException("CURRENT_SEAT_NOT_FOUND", "対象ユーザーの現在位置が登録されていません"));
+                .thenThrow(new ResourceNotFoundException("CURRENT_SEAT_NOT_FOUND",
+                        "対象ユーザーの現在位置が登録されていません"));
 
         mockMvc.perform(get("/api/users/999/current-seat"))
                 .andExpect(status().isNotFound())
@@ -128,8 +126,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("validation error"))
                 .andExpect(jsonPath("$.errors[0].field").value("userId"));
@@ -148,8 +146,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
     }
@@ -167,8 +165,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("SEAT_NOT_FOUND"));
     }
@@ -186,8 +184,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("SEAT_ALREADY_IN_USE"));
     }
@@ -204,8 +202,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats/leave")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
     }
@@ -213,7 +211,8 @@ class UserSeatControllerTest {
     @Test
     void leaveCurrentSeat_whenCurrentSeatNotFound_shouldReturn404() throws Exception {
         when(userSeatService.leaveCurrentSeat(any()))
-                .thenThrow(new ResourceNotFoundException("CURRENT_SEAT_NOT_FOUND", "対象ユーザーの現在位置が登録されていません"));
+                .thenThrow(new ResourceNotFoundException("CURRENT_SEAT_NOT_FOUND",
+                        "対象ユーザーの現在位置が登録されていません"));
 
         String body = """
                 {
@@ -222,8 +221,8 @@ class UserSeatControllerTest {
                 """;
 
         mockMvc.perform(post("/api/user-seats/leave")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("CURRENT_SEAT_NOT_FOUND"));
     }
