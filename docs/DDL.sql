@@ -1,4 +1,13 @@
-CREATE DATABASE seat_management;
+-- Active: 1734412088091@@127.0.0.1@5432@office-navi
+-- Run this file after reconnecting to database: "office-navi".
+BEGIN;
+
+-- Recreate schema in the currently connected database.
+DROP TABLE IF EXISTS user_seats CASCADE;
+
+DROP TABLE IF EXISTS seats CASCADE;
+
+DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
@@ -24,14 +33,8 @@ CREATE TABLE user_seats (
     start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_time TIMESTAMP NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_user_seats_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_user_seats_seat
-        FOREIGN KEY (seat_id)
-        REFERENCES seats(id)
-        ON DELETE CASCADE
+    CONSTRAINT fk_user_seats_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_seats_seat FOREIGN KEY (seat_id) REFERENCES seats (id) ON DELETE CASCADE
 );
+
+COMMIT;
