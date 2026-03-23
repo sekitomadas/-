@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<build> 
 		<directory>target</directory>
-		<finalName>officenavi-app-sekino</finalName>
+		<finalName>officenavi-app</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -82,14 +82,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
-
 </project>
