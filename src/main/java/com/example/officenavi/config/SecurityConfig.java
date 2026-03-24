@@ -35,7 +35,13 @@ public class SecurityConfig {
     }
 
     /**
-     * APIを従来どおり公開しつつ、CSRFを無効化します。
+     * セキュリティフィルターチェーンを設定します。
+     * JWT認証によるステートレス設定を使用します。
+     * - OPTIONS リクエスト: 全て許可
+     * - /api/auth/login: 認証なしで許可（ログインエンドポイント）
+     * - POST /api/users: ADMIN ロール必須
+     * - /api/**: JWT トークン必須（認証要）
+     * その他: 許可
      *
      * @param http HttpSecurity
      * @return セキュリティフィルターチェーン
