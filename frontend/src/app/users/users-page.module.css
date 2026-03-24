@@ -51,6 +51,17 @@
   font-size: 13px;
 }
 
+.links button {
+  background: #eff6ff;
+  color: #1d4e89;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .tableWrap {
   overflow-x: auto;
 }

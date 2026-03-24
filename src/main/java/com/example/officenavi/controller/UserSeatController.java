@@ -1,16 +1,16 @@
 package com.example.officenavi.controller;
 
 import com.example.officenavi.domain.userseat.UserCurrentSeatResponse;
-import com.example.officenavi.domain.userseat.UserSeatLeaveRequest;
 import com.example.officenavi.domain.userseat.UserSeatLeaveResponse;
 import com.example.officenavi.domain.userseat.UserSeatRegisterRequest;
 import com.example.officenavi.domain.userseat.UserSeatRegisterResponse;
+import com.example.officenavi.security.AuthenticatedUser;
 import com.example.officenavi.service.UserSeatService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,33 +42,35 @@ public class UserSeatController {
      */
     @PostMapping("/user-seats")
     public ResponseEntity<UserSeatRegisterResponse> registerCurrentSeat(
-            @Valid @RequestBody UserSeatRegisterRequest request) {
-        UserSeatRegisterResponse response = userSeatService.registerCurrentSeat(request);
+            @Valid @RequestBody UserSeatRegisterRequest request,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        UserSeatRegisterResponse response = userSeatService.registerCurrentSeat(
+                authenticatedUser.userId(),
+                request.getSeatId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
      * 社員を退席状態に更新します。
      *
-     * @param request 退席リクエスト
      * @return 200 OK（退席情報）
      */
     @PostMapping("/user-seats/leave")
     public ResponseEntity<UserSeatLeaveResponse> leaveCurrentSeat(
-            @Valid @RequestBody UserSeatLeaveRequest request) {
-        UserSeatLeaveResponse response = userSeatService.leaveCurrentSeat(request);
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        UserSeatLeaveResponse response = userSeatService.leaveCurrentSeat(authenticatedUser.userId());
         return ResponseEntity.ok(response);
     }
 
     /**
-     * 社員の現在位置を取得します。
+     * ログインユーザーの現在位置を取得します。
      *
-     * @param userId ユーザーID
      * @return 200 OK（現在位置情報）
      */
-    @GetMapping("/users/{userId}/current-seat")
-    public ResponseEntity<UserCurrentSeatResponse> getCurrentSeat(@PathVariable Integer userId) {
-        UserCurrentSeatResponse response = userSeatService.getCurrentSeat(userId);
+    @GetMapping("/users/me/current-seat")
+    public ResponseEntity<UserCurrentSeatResponse> getCurrentSeat(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        UserCurrentSeatResponse response = userSeatService.getCurrentSeat(authenticatedUser.userId());
         return ResponseEntity.ok(response);
     }
 }

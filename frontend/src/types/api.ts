@@ -4,6 +4,17 @@ export type User = {
   email: string;
 };
 
+export type LoginRequest = {
+  email: string;
+  password: string;
+};
+
+export type LoginResponse = {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+};
+
 export type UserRegisterRequest = {
   name: string;
   email: string;
@@ -24,7 +35,6 @@ export type Seat = {
 };
 
 export type UserSeatRegisterRequest = {
-  userId: number;
   seatId: number;
 };
 
@@ -33,10 +43,6 @@ export type UserSeatRegisterResponse = {
   userId: number;
   seatId: number;
   startTime: string;
-};
-
-export type UserSeatLeaveRequest = {
-  userId: number;
 };
 
 export type UserSeatLeaveResponse = {
