@@ -7,6 +7,10 @@ spring:
     username: ${OFFICE_NAVI_DB_USER:postgres}
     password: ${OFFICE_NAVI_DB_PASS:postgres}
 
+app:
+  cors:
+    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
+
 # server:
 #   servlet:
 #     context-path: /office-navi
