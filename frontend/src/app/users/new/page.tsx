@@ -9,38 +9,37 @@ import styles from "./users-new-page.module.css";
 
 type FormErrors = Partial<Record<keyof UserRegisterRequest, string>>;
 
+const NO_WHITESPACE_PATTERN = /^(?!.*[\s　]).+$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_PATTERN = /^(?!.*[\s　])(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+
 const validate = (payload: UserRegisterRequest): FormErrors => {
   const errors: FormErrors = {};
-  const hasSpace = (value: string) => /[\s　]/.test(value);
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
 
   if (!payload.name) {
     errors.name = "名前は必須です";
   } else if (payload.name.length > 100) {
-    errors.name = "名前は100文字以内で入力してください";
-  } else if (hasSpace(payload.name)) {
-    errors.name = "名前に空白は使用できません";
+    errors.name = "名前は1~100文字以内で入力してください";
+  } else if (!NO_WHITESPACE_PATTERN.test(payload.name)) {
+    errors.name = "名前に空白（半角/全角）は使用できません";
   }
 
   if (!payload.email) {
     errors.email = "メールアドレスは必須です";
   } else if (payload.email.length < 8 || payload.email.length > 255) {
-    errors.email = "メールアドレスは8-255文字で入力してください";
-  } else if (!emailPattern.test(payload.email)) {
-    errors.email = "メールアドレスの形式が不正です";
-  } else if (hasSpace(payload.email)) {
-    errors.email = "メールアドレスに空白は使用できません";
+    errors.email = "メールアドレスは8~255文字以内で入力してください";
+  } else if (!EMAIL_PATTERN.test(payload.email)) {
+    errors.email = "有効なメールアドレスを入力してください";
+  } else if (!NO_WHITESPACE_PATTERN.test(payload.email)) {
+    errors.email = "メールアドレスに空白（半角/全角）は使用できません";
   }
 
   if (!payload.password) {
     errors.password = "パスワードは必須です";
   } else if (payload.password.length < 8 || payload.password.length > 255) {
-    errors.password = "パスワードは8-255文字で入力してください";
-  } else if (hasSpace(payload.password)) {
-    errors.password = "パスワードに空白は使用できません";
-  } else if (!passwordPattern.test(payload.password)) {
-    errors.password = "英大文字・英小文字・数字をそれぞれ1文字以上含めてください";
+    errors.password = "パスワードは8~255文字以内で入力してください";
+  } else if (!PASSWORD_PATTERN.test(payload.password)) {
+    errors.password = "パスワードは空白なしで、大文字・小文字・数字をそれぞれ1文字以上含めてください";
   }
 
   return errors;
