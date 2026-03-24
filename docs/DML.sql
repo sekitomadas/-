@@ -12,6 +12,15 @@ INSERT INTO
         created_at,
         updated_at
     )
+
+-- Promote one bootstrap account to ADMIN (0). Others remain GENERAL (1 by default).
+UPDATE users
+SET
+    role_code = 0,
+    updated_at = NOW()
+WHERE
+    email = 'officenavi_user_001@example.com';
+
 VALUES (
         'User 001',
         'officenavi_user_001@example.com',
