@@ -7,19 +7,8 @@ import jakarta.validation.constraints.NotNull;
  */
 public class UserSeatRegisterRequest {
 
-    @NotNull(message = "userIdは必須です")
-    private Integer userId;
-
     @NotNull(message = "seatIdは必須です")
     private Integer seatId;
-
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
 
     public Integer getSeatId() {
         return seatId;

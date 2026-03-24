@@ -1,28 +1,29 @@
 .page {
   min-height: 100%;
-  padding: clamp(16px, 4vw, 28px);
+  padding: 24px;
+  display: grid;
+  place-items: center;
   background:
-    radial-gradient(circle at 20% 20%, #dbeafe 0%, transparent 40%),
-    radial-gradient(circle at 80% 75%, #fde68a 0%, transparent 42%),
+    radial-gradient(circle at 18% 20%, #fde68a 0%, transparent 36%),
+    radial-gradient(circle at 82% 78%, #bfdbfe 0%, transparent 40%),
     #f8fafc;
 }
 
 .main {
-  max-width: 760px;
-  margin: 0 auto;
-  border-radius: 18px;
+  width: min(520px, 100%);
   border: 1px solid #d9e2ec;
-  background: #fff;
-  box-shadow: 0 20px 46px #00000010;
-  padding: clamp(18px, 3.5vw, 32px);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 20px 45px #00000012;
+  padding: clamp(18px, 4vw, 30px);
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .header {
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
+  align-items: flex-end;
   gap: 12px;
 }
 
@@ -35,39 +36,23 @@
 }
 
 .header h1 {
+  font-size: clamp(26px, 4vw, 34px);
   color: #102a43;
-  font-size: clamp(24px, 3vw, 34px);
 }
 
-.links {
-  display: flex;
-  gap: 8px;
-}
-
-.links a {
+.backLink {
   font-size: 13px;
   border-radius: 999px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #bfdbfe;
   padding: 8px 12px;
-  background: #f8fafc;
-  color: #334e68;
+  color: #1d4e89;
+  background: #eff6ff;
   font-weight: 600;
-}
-
-.links button {
-  font-size: 13px;
-  border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  padding: 8px 12px;
-  background: #f8fafc;
-  color: #334e68;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .form {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .field {
@@ -94,20 +79,15 @@
   box-shadow: 0 0 0 3px #dbeafe;
 }
 
-.field small {
-  color: #b42318;
-}
-
 .error {
   color: #b42318;
-  background: #fee4e2;
   border: 1px solid #fecdca;
+  background: #fee4e2;
   border-radius: 10px;
   padding: 10px 12px;
 }
 
 .form button {
-  margin-top: 6px;
   border: 0;
   border-radius: 10px;
   background: #1d4ed8;
@@ -119,13 +99,6 @@
 }
 
 .form button:disabled {
-  cursor: not-allowed;
   background: #94a3b8;
-}
-
-@media (max-width: 680px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  cursor: not-allowed;
 }

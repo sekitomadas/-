@@ -3,9 +3,7 @@ package com.example.officenavi.service;
 import com.example.officenavi.domain.userseat.UserCurrentSeatEntity;
 import com.example.officenavi.domain.userseat.UserCurrentSeatResponse;
 import com.example.officenavi.domain.userseat.UserSeatEntity;
-import com.example.officenavi.domain.userseat.UserSeatLeaveRequest;
 import com.example.officenavi.domain.userseat.UserSeatLeaveResponse;
-import com.example.officenavi.domain.userseat.UserSeatRegisterRequest;
 import com.example.officenavi.domain.userseat.UserSeatRegisterResponse;
 import com.example.officenavi.exception.ResourceNotFoundException;
 import com.example.officenavi.exception.SeatAlreadyInUseException;
@@ -36,44 +34,42 @@ public class UserSeatService {
      * 社員の現在位置を登録します。
      * 存在チェック後、既存の有効在席情報をクローズして新規登録します。
      *
-     * @param request 在席情報登録リクエスト
+     * @param userId ユーザーID
+     * @param seatId 座席ID
      * @return 在席情報登録レスポンス
      */
     @Transactional
-    public UserSeatRegisterResponse registerCurrentSeat(UserSeatRegisterRequest request) {
-        if (!userSeatRepository.existsUser(request.getUserId())) {
+    public UserSeatRegisterResponse registerCurrentSeat(Integer userId, Integer seatId) {
+        if (!userSeatRepository.existsUser(userId)) {
             throw new ResourceNotFoundException("USER_NOT_FOUND", "指定されたuserIdは存在しません");
         }
 
-        if (!userSeatRepository.existsSeat(request.getSeatId())) {
+        if (!userSeatRepository.existsSeat(seatId)) {
             throw new ResourceNotFoundException("SEAT_NOT_FOUND", "指定されたseatIdは存在しません");
         }
 
-        if (userSeatRepository.isSeatInUseByAnotherUser(request.getSeatId(), request.getUserId())) {
+        if (userSeatRepository.isSeatInUseByAnotherUser(seatId, userId)) {
             throw new SeatAlreadyInUseException("SEAT_ALREADY_IN_USE", "指定されたseatIdは既に利用中です");
         }
 
-        userSeatRepository.closeCurrentSeat(request.getUserId());
-        UserSeatEntity userSeatEntity = userSeatRepository.registerCurrentSeat(request.getUserId(), request.getSeatId());
+        userSeatRepository.closeCurrentSeat(userId);
+        UserSeatEntity userSeatEntity = userSeatRepository.registerCurrentSeat(userId, seatId);
 
         return new UserSeatRegisterResponse(
                 userSeatEntity.getId(),
                 userSeatEntity.getUserId(),
                 userSeatEntity.getSeatId(),
-                userSeatEntity.getStartTime()
-        );
+                userSeatEntity.getStartTime());
     }
 
     /**
      * 社員を退席状態に更新します。
      *
-     * @param request 退席リクエスト
+     * @param userId ユーザーID
      * @return 退席レスポンス
      */
     @Transactional
-    public UserSeatLeaveResponse leaveCurrentSeat(UserSeatLeaveRequest request) {
-        Integer userId = request.getUserId();
-
+    public UserSeatLeaveResponse leaveCurrentSeat(Integer userId) {
         if (!userSeatRepository.existsUser(userId)) {
             throw new ResourceNotFoundException("USER_NOT_FOUND", "指定されたuserIdは存在しません");
         }
@@ -101,8 +97,7 @@ public class UserSeatService {
         UserCurrentSeatEntity entity = userSeatRepository.findCurrentSeatByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "CURRENT_SEAT_NOT_FOUND",
-                        "対象ユーザーの現在位置が登録されていません"
-                ));
+                        "対象ユーザーの現在位置が登録されていません"));
 
         return new UserCurrentSeatResponse(
                 entity.getUserId(),
@@ -110,9 +105,7 @@ public class UserSeatService {
                 new UserCurrentSeatResponse.SeatInfo(
                         entity.getSeatId(),
                         entity.getSeatName(),
-                        entity.getSeatLocation()
-                ),
-                entity.getSince()
-        );
+                        entity.getSeatLocation()),
+                entity.getSince());
     }
 }
