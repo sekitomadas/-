@@ -43,3 +43,18 @@ npm run format:check
 - NEXT_PUBLIC_API_BASE_URL
   - バックエンドAPIのベースURL
   - 例: http://localhost:8080/api
+
+## APIクライアント
+
+- 共通クライアント: `src/lib/api/client.ts`
+- エンドポイント別関数: `src/lib/api/`
+- 型定義: `src/types/api.ts`
+
+現在実装しているAPI関数:
+
+- `getUsers`
+- `registerUser`
+- `getSeats`
+- `registerCurrentSeat`
+- `leaveCurrentSeat`
+- `getCurrentSeat`
