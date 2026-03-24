@@ -45,6 +45,24 @@ const validate = (payload: UserRegisterRequest): FormErrors => {
   return errors;
 };
 
+const toServerFieldErrors = (err: ApiClientError): FormErrors => {
+  const serverFieldErrors: FormErrors = {};
+
+  for (const item of err.fieldErrors) {
+    if (item.field === "name" || item.field === "email" || item.field === "password") {
+      serverFieldErrors[item.field] = item.message;
+    }
+  }
+
+  for (const item of err.details) {
+    if (item.field === "name" || item.field === "email" || item.field === "password") {
+      serverFieldErrors[item.field] = item.reason;
+    }
+  }
+
+  return serverFieldErrors;
+};
+
 export default function NewUserPage() {
   const router = useRouter();
 
@@ -88,14 +106,14 @@ export default function NewUserPage() {
       router.push("/users");
     } catch (err) {
       if (err instanceof ApiClientError) {
-        const serverFieldErrors: FormErrors = {};
-        for (const item of err.fieldErrors) {
-          if (item.field === "name" || item.field === "email" || item.field === "password") {
-            serverFieldErrors[item.field] = item.message;
-          }
-        }
+        const serverFieldErrors = toServerFieldErrors(err);
         setFieldErrors(serverFieldErrors);
-        setError(err.message || "登録に失敗しました");
+
+        if (Object.keys(serverFieldErrors).length > 0) {
+          setError("");
+        } else {
+          setError(err.message || "登録に失敗しました");
+        }
       } else {
         setError("通信エラーが発生しました");
       }
