@@ -1,7 +1,32 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { logout } from "@/lib/api";
+import { hasAccessToken } from "@/lib/api/client";
 import styles from "./page.module.css";
 
 export default function Home() {
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const frameId = requestAnimationFrame(() => {
+      setIsLoggedIn(hasAccessToken());
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, []);
+
+  const onLogout = () => {
+    logout();
+    setIsLoggedIn(false);
+    router.push("/login");
+  };
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -15,6 +40,16 @@ export default function Home() {
         </div>
 
         <div className={styles.actions}>
+          {!isLoggedIn && (
+            <Link className={styles.primary} href="/login">
+              ログイン
+            </Link>
+          )}
+          {isLoggedIn && (
+            <button type="button" className={styles.secondary} onClick={onLogout}>
+              ログアウト
+            </button>
+          )}
           <Link className={styles.primary} href="/users">
             社員一覧を開く
           </Link>

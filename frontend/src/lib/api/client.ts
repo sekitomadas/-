@@ -4,6 +4,8 @@ const DEFAULT_HEADERS = {
   "Content-Type": "application/json",
 } as const;
 
+const ACCESS_TOKEN_STORAGE_KEY = "officenavi_access_token";
+
 export class ApiClientError extends Error {
   status: number;
   code?: string;
@@ -19,6 +21,30 @@ export class ApiClientError extends Error {
     this.fieldErrors = response.errors ?? [];
   }
 }
+
+const getAccessToken = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+};
+
+export const hasAccessToken = () => {
+  return !!getAccessToken();
+};
+
+export const setAccessToken = (token: string | null) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!token) {
+    window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+};
 
 const getApiBaseUrl = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -60,10 +86,13 @@ const toApiErrorResponse = (response: ApiErrorResponse | null): ApiErrorResponse
 };
 
 export const apiRequest = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const accessToken = getAccessToken();
+
   const response = await fetch(buildUrl(path), {
     ...init,
     headers: {
       ...DEFAULT_HEADERS,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(init?.headers ?? {}),
     },
     cache: "no-store",
@@ -72,6 +101,9 @@ export const apiRequest = async <T>(path: string, init?: RequestInit): Promise<T
   const body = await parseJson<T | ApiErrorResponse>(response);
 
   if (!response.ok) {
+    if (response.status === 401) {
+      setAccessToken(null);
+    }
     throw new ApiClientError(response.status, toApiErrorResponse(body as ApiErrorResponse | null));
   }
 

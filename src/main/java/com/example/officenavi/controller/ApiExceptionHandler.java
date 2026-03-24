@@ -1,5 +1,6 @@
 package com.example.officenavi.controller;
 
+import com.example.officenavi.exception.AuthenticationFailedException;
 import com.example.officenavi.exception.ResourceNotFoundException;
 import com.example.officenavi.exception.SeatAlreadyInUseException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +20,22 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    /**
+     * ログイン失敗を処理します。
+     *
+     * @param ex 認証失敗例外
+     * @return 401レスポンス
+     */
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationFailed(AuthenticationFailedException ex) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("code", "AUTHENTICATION_FAILED");
+        response.put("message", ex.getMessage());
+        response.put("details", List.of());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
 
     /**
      * リクエストボディのバリデーション失敗を処理します。
@@ -55,8 +72,7 @@ public class ApiExceptionHandler {
 
         List<Map<String, Object>> details = List.of(Map.of(
                 "field", "email",
-                "reason", "既に使用されているメールアドレスです"
-        ));
+                "reason", "既に使用されているメールアドレスです"));
         response.put("details", details);
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
@@ -91,8 +107,7 @@ public class ApiExceptionHandler {
         response.put("message", ex.getMessage());
         response.put("details", List.of(Map.of(
                 "field", "seatId",
-                "reason", "既に他のユーザーが利用中です"
-        )));
+                "reason", "既に他のユーザーが利用中です")));
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }

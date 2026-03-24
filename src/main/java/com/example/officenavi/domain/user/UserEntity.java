@@ -6,17 +6,21 @@ import java.time.LocalDateTime;
  * 従業員を表すドメインエンティティです。
  */
 public class UserEntity {
+    public static final int ROLE_ADMIN = 0;
+    public static final int ROLE_GENERAL = 1;
+
     private Integer id;
     private String name;
     private String email;
     private String passwordHash;
+    private Integer roleCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     /**
      * 一覧取得用途の従業員を生成します。
      *
-     * @param name 従業員名
+     * @param name  従業員名
      * @param email メールアドレス
      */
     public UserEntity(String name, String email) {
@@ -26,14 +30,15 @@ public class UserEntity {
     /**
      * パスワードハッシュを含む従業員を生成します。
      *
-     * @param name 従業員名
-     * @param email メールアドレス
+     * @param name         従業員名
+     * @param email        メールアドレス
      * @param passwordHash パスワードハッシュ
      */
     public UserEntity(String name, String email, String passwordHash) {
         this.name = name;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.roleCode = ROLE_GENERAL;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -110,6 +115,25 @@ public class UserEntity {
      */
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * ロールコードを取得します（0:ADMIN, 1:GENERAL）。
+     *
+     * @return ロールコード
+     */
+    public Integer getRoleCode() {
+        return roleCode;
+    }
+
+    /**
+     * ロールコードを設定します（0:ADMIN, 1:GENERAL）。
+     *
+     * @param roleCode ロールコード
+     */
+    public void setRoleCode(Integer roleCode) {
+        this.roleCode = roleCode;
         this.updatedAt = LocalDateTime.now();
     }
 

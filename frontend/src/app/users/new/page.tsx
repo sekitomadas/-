@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ApiClientError, registerUser } from "@/lib/api";
+import { ApiClientError, logout, registerUser } from "@/lib/api";
+import { hasAccessToken } from "@/lib/api/client";
 import type { UserRegisterRequest } from "@/types/api";
 import styles from "./users-new-page.module.css";
 
@@ -65,6 +66,8 @@ const toServerFieldErrors = (err: ApiClientError): FormErrors => {
 
 export default function NewUserPage() {
   const router = useRouter();
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [form, setForm] = useState<UserRegisterRequest>({
     name: "",
@@ -75,6 +78,21 @@ export default function NewUserPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    const loggedIn = hasAccessToken();
+    setIsLoggedIn(loggedIn);
+
+    if (!loggedIn) {
+      router.replace("/login");
+    }
+  }, [router]);
+
+  const onLogout = () => {
+    logout();
+    setIsLoggedIn(false);
+    router.push("/login");
+  };
+
   const hasClientError = useMemo(() => {
     const errors = validate(form);
     return Object.keys(errors).length > 0;
@@ -82,10 +100,26 @@ export default function NewUserPage() {
 
   const onChange = (key: keyof UserRegisterRequest, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+
+    if (key === "email") {
+      setFieldErrors((prev) => ({
+        ...prev,
+        email: validate({ ...form, email: value }).email,
+      }));
+    }
   };
 
   const onBlur = (key: keyof UserRegisterRequest) => {
     const errors = validate(form);
+
+    if (key === "email") {
+      setFieldErrors((prev) => ({
+        ...prev,
+        email: errors.email,
+      }));
+      return;
+    }
+
     setFieldErrors((prev) => ({ ...prev, [key]: errors[key] }));
   };
 
@@ -108,6 +142,12 @@ export default function NewUserPage() {
       if (err instanceof ApiClientError) {
         const serverFieldErrors = toServerFieldErrors(err);
         setFieldErrors(serverFieldErrors);
+
+        if (serverFieldErrors.email) {
+          requestAnimationFrame(() => {
+            emailInputRef.current?.focus();
+          });
+        }
 
         if (Object.keys(serverFieldErrors).length > 0) {
           setError("");
@@ -133,11 +173,17 @@ export default function NewUserPage() {
           <div className={styles.links}>
             <Link href="/">トップ</Link>
             <Link href="/users">社員一覧</Link>
+            {!isLoggedIn && <Link href="/login">ログイン</Link>}
+            {isLoggedIn && (
+              <button type="button" onClick={onLogout}>
+                ログアウト
+              </button>
+            )}
             <Link href="/seat-actions">座席操作</Link>
           </div>
         </header>
 
-        <form className={styles.form} onSubmit={onSubmit}>
+        <form className={styles.form} onSubmit={onSubmit} noValidate>
           <label className={styles.field}>
             <span>名前</span>
             <input
@@ -154,6 +200,7 @@ export default function NewUserPage() {
           <label className={styles.field}>
             <span>メールアドレス</span>
             <input
+              ref={emailInputRef}
               type="email"
               value={form.email}
               onChange={(e) => onChange("email", e.target.value)}
