@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   ApiClientError,
   getCurrentSeat,
@@ -142,10 +141,6 @@ export default function SeatActionsPage() {
           <div>
             <p className={styles.kicker}>Seat Actions</p>
             <h1>座席登録・退席</h1>
-          </div>
-          <div className={styles.links}>
-            <Link href="/">トップ</Link>
-            <Link href="/users">社員一覧</Link>
           </div>
         </header>
 
