@@ -22,3 +22,11 @@ export const leaveCurrentSeat = async () => {
 export const getCurrentSeat = async () => {
   return apiRequest<CurrentSeat>("/users/me/current-seat");
 };
+
+export const getCurrentSeatByUserId = async (userId: number) => {
+  return apiRequest<CurrentSeat>(`/users/${userId}/current-seat`);
+};
+
+export const getAllCurrentSeats = async () => {
+  return apiRequest<CurrentSeat[]>("/users/current-seats");
+};

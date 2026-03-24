@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 在席情報の業務ロジックを扱うサービスです。
@@ -99,6 +100,21 @@ public class UserSeatService {
                         "CURRENT_SEAT_NOT_FOUND",
                         "対象ユーザーの現在位置が登録されていません"));
 
+        return toResponse(entity);
+    }
+
+    /**
+     * 現在在席中のユーザー一覧を取得します。
+     *
+     * @return 現在位置取得レスポンス一覧
+     */
+    public List<UserCurrentSeatResponse> getAllCurrentSeats() {
+        return userSeatRepository.findAllCurrentSeats().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private UserCurrentSeatResponse toResponse(UserCurrentSeatEntity entity) {
         return new UserCurrentSeatResponse(
                 entity.getUserId(),
                 entity.getUserName(),
