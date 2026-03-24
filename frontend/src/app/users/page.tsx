@@ -1,23 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ApiClientError, getUsers, logout } from "@/lib/api";
+import { ApiClientError, getUsers } from "@/lib/api";
 import { hasAccessToken } from "@/lib/api/client";
 import type { User } from "@/types/api";
 import styles from "./users-page.module.css";
 
 export default function UsersPage() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const loggedIn = hasAccessToken();
-    setIsLoggedIn(loggedIn);
 
     if (!loggedIn) {
       router.replace("/login");
@@ -44,12 +41,6 @@ export default function UsersPage() {
     void load();
   }, [router]);
 
-  const onLogout = () => {
-    logout();
-    setIsLoggedIn(false);
-    router.push("/login");
-  };
-
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -57,18 +48,6 @@ export default function UsersPage() {
           <div>
             <p className={styles.kicker}>Employees</p>
             <h1>社員一覧</h1>
-          </div>
-          <div className={styles.links}>
-            <Link href="/">トップ</Link>
-            <Link href="/users/new">新規登録</Link>
-            <Link href="/seat-actions">座席操作</Link>
-            <Link href="/users/new">社員を登録する</Link>
-            {!isLoggedIn && <Link href="/login">ログイン</Link>}
-            {isLoggedIn && (
-              <button type="button" onClick={onLogout}>
-                ログアウト
-              </button>
-            )}
           </div>
         </header>
 

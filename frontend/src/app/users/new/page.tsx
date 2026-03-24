@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ApiClientError, logout, registerUser } from "@/lib/api";
+import { ApiClientError, registerUser } from "@/lib/api";
 import { hasAccessToken } from "@/lib/api/client";
 import type { UserRegisterRequest } from "@/types/api";
 import styles from "./users-new-page.module.css";
@@ -67,7 +66,6 @@ const toServerFieldErrors = (err: ApiClientError): FormErrors => {
 export default function NewUserPage() {
   const router = useRouter();
   const emailInputRef = useRef<HTMLInputElement | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [form, setForm] = useState<UserRegisterRequest>({
     name: "",
@@ -80,18 +78,11 @@ export default function NewUserPage() {
 
   useEffect(() => {
     const loggedIn = hasAccessToken();
-    setIsLoggedIn(loggedIn);
 
     if (!loggedIn) {
       router.replace("/login");
     }
   }, [router]);
-
-  const onLogout = () => {
-    logout();
-    setIsLoggedIn(false);
-    router.push("/login");
-  };
 
   const hasClientError = useMemo(() => {
     const errors = validate(form);
@@ -169,17 +160,6 @@ export default function NewUserPage() {
           <div>
             <p className={styles.kicker}>New Employee</p>
             <h1>社員登録</h1>
-          </div>
-          <div className={styles.links}>
-            <Link href="/">トップ</Link>
-            <Link href="/users">社員一覧</Link>
-            {!isLoggedIn && <Link href="/login">ログイン</Link>}
-            {isLoggedIn && (
-              <button type="button" onClick={onLogout}>
-                ログアウト
-              </button>
-            )}
-            <Link href="/seat-actions">座席操作</Link>
           </div>
         </header>
 

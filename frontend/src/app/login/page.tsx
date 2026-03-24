@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiClientError, login } from "@/lib/api";
 import { hasAccessToken } from "@/lib/api/client";
@@ -52,9 +51,6 @@ export default function LoginPage() {
             <p className={styles.kicker}>OfficeNavi Auth</p>
             <h1>ログイン</h1>
           </div>
-          <Link href="/" className={styles.backLink}>
-            トップへ戻る
-          </Link>
         </header>
 
         <form className={styles.form} onSubmit={onSubmit} noValidate>
