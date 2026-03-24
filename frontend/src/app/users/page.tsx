@@ -60,6 +60,8 @@ export default function UsersPage() {
           </div>
           <div className={styles.links}>
             <Link href="/">トップ</Link>
+            <Link href="/users/new">新規登録</Link>
+            <Link href="/seat-actions">座席操作</Link>
             <Link href="/users/new">社員を登録する</Link>
             {!isLoggedIn && <Link href="/login">ログイン</Link>}
             {isLoggedIn && (

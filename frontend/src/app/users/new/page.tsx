@@ -179,6 +179,7 @@ export default function NewUserPage() {
                 ログアウト
               </button>
             )}
+            <Link href="/seat-actions">座席操作</Link>
           </div>
         </header>
 
