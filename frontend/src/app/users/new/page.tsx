@@ -67,6 +67,11 @@ export default function NewUserPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const onBlur = (key: keyof UserRegisterRequest) => {
+    const errors = validate(form);
+    setFieldErrors((prev) => ({ ...prev, [key]: errors[key] }));
+  };
+
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -121,6 +126,7 @@ export default function NewUserPage() {
               type="text"
               value={form.name}
               onChange={(e) => onChange("name", e.target.value)}
+              onBlur={() => onBlur("name")}
               placeholder="例: yamada"
               autoComplete="name"
             />
@@ -133,6 +139,7 @@ export default function NewUserPage() {
               type="email"
               value={form.email}
               onChange={(e) => onChange("email", e.target.value)}
+              onBlur={() => onBlur("email")}
               placeholder="example@example.com"
               autoComplete="email"
             />
@@ -145,6 +152,7 @@ export default function NewUserPage() {
               type="password"
               value={form.password}
               onChange={(e) => onChange("password", e.target.value)}
+              onBlur={() => onBlur("password")}
               placeholder="英大文字・英小文字・数字を含む"
               autoComplete="new-password"
             />
