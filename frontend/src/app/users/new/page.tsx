@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiClientError, registerUser } from "@/lib/api";
@@ -65,6 +65,7 @@ const toServerFieldErrors = (err: ApiClientError): FormErrors => {
 
 export default function NewUserPage() {
   const router = useRouter();
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
 
   const [form, setForm] = useState<UserRegisterRequest>({
     name: "",
@@ -82,10 +83,26 @@ export default function NewUserPage() {
 
   const onChange = (key: keyof UserRegisterRequest, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+
+    if (key === "email") {
+      setFieldErrors((prev) => ({
+        ...prev,
+        email: validate({ ...form, email: value }).email,
+      }));
+    }
   };
 
   const onBlur = (key: keyof UserRegisterRequest) => {
     const errors = validate(form);
+
+    if (key === "email") {
+      setFieldErrors((prev) => ({
+        ...prev,
+        email: errors.email,
+      }));
+      return;
+    }
+
     setFieldErrors((prev) => ({ ...prev, [key]: errors[key] }));
   };
 
@@ -108,6 +125,12 @@ export default function NewUserPage() {
       if (err instanceof ApiClientError) {
         const serverFieldErrors = toServerFieldErrors(err);
         setFieldErrors(serverFieldErrors);
+
+        if (serverFieldErrors.email) {
+          requestAnimationFrame(() => {
+            emailInputRef.current?.focus();
+          });
+        }
 
         if (Object.keys(serverFieldErrors).length > 0) {
           setError("");
@@ -136,7 +159,7 @@ export default function NewUserPage() {
           </div>
         </header>
 
-        <form className={styles.form} onSubmit={onSubmit}>
+        <form className={styles.form} onSubmit={onSubmit} noValidate>
           <label className={styles.field}>
             <span>名前</span>
             <input
@@ -153,6 +176,7 @@ export default function NewUserPage() {
           <label className={styles.field}>
             <span>メールアドレス</span>
             <input
+              ref={emailInputRef}
               type="email"
               value={form.email}
               onChange={(e) => onChange("email", e.target.value)}
