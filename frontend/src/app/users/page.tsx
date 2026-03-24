@@ -43,6 +43,7 @@ export default function UsersPage() {
           <div className={styles.links}>
             <Link href="/">トップ</Link>
             <Link href="/users/new">新規登録</Link>
+            <Link href="/seat-actions">座席操作</Link>
           </div>
         </header>
 

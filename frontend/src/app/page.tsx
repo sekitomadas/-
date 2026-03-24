@@ -21,6 +21,9 @@ export default function Home() {
           <Link className={styles.secondary} href="/users/new">
             社員を登録する
           </Link>
+          <Link className={styles.secondary} href="/seat-actions">
+            座席登録・退席
+          </Link>
         </div>
       </main>
     </div>
