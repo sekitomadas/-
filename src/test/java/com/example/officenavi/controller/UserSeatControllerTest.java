@@ -138,6 +138,57 @@ class UserSeatControllerTest {
         }
 
         @Test
+        void getCurrentSeatByUserId_shouldReturn200() throws Exception {
+                UserCurrentSeatResponse response = new UserCurrentSeatResponse(
+                                5,
+                                "佐藤花子",
+                                new UserCurrentSeatResponse.SeatInfo(20, "B-20", "4F West"),
+                                LocalDateTime.of(2026, 3, 24, 9, 0, 0));
+                when(userSeatService.getCurrentSeat(5)).thenReturn(response);
+
+                mockMvc.perform(get("/api/users/5/current-seat")
+                                .with(loginAs(1)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.userId").value(5))
+                                .andExpect(jsonPath("$.userName").value("佐藤花子"))
+                                .andExpect(jsonPath("$.seat.id").value(20));
+        }
+
+        @Test
+        void getCurrentSeatByUserId_whenNotFound_shouldReturn404() throws Exception {
+                when(userSeatService.getCurrentSeat(404))
+                                .thenThrow(new ResourceNotFoundException("CURRENT_SEAT_NOT_FOUND",
+                                                "対象ユーザーの現在位置が登録されていません"));
+
+                mockMvc.perform(get("/api/users/404/current-seat")
+                                .with(loginAs(1)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.code").value("CURRENT_SEAT_NOT_FOUND"));
+        }
+
+        @Test
+        void getAllCurrentSeats_shouldReturn200() throws Exception {
+                when(userSeatService.getAllCurrentSeats()).thenReturn(List.of(
+                                new UserCurrentSeatResponse(
+                                                1,
+                                                "山田太郎",
+                                                new UserCurrentSeatResponse.SeatInfo(10, "A-01", "3F East"),
+                                                LocalDateTime.of(2026, 3, 24, 9, 0, 0)),
+                                new UserCurrentSeatResponse(
+                                                2,
+                                                "佐藤花子",
+                                                new UserCurrentSeatResponse.SeatInfo(20, "B-10", "4F West"),
+                                                LocalDateTime.of(2026, 3, 24, 9, 15, 0))));
+
+                mockMvc.perform(get("/api/users/current-seats")
+                                .with(loginAs(1)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].userId").value(1))
+                                .andExpect(jsonPath("$[0].seat.id").value(10))
+                                .andExpect(jsonPath("$[1].userId").value(2));
+        }
+
+        @Test
         void registerCurrentSeat_whenUserNotFound_shouldReturn404() throws Exception {
                 when(userSeatService.registerCurrentSeat(anyInt(), anyInt()))
                                 .thenThrow(new ResourceNotFoundException("USER_NOT_FOUND", "指定されたuserIdは存在しません"));
