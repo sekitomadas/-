@@ -6,11 +6,10 @@ import {
   ApiClientError,
   getCurrentSeat,
   getSeats,
-  getUsers,
   leaveCurrentSeat,
   registerCurrentSeat,
 } from "@/lib/api";
-import type { CurrentSeat, Seat, User } from "@/types/api";
+import type { CurrentSeat, Seat } from "@/types/api";
 import styles from "./seat-actions-page.module.css";
 
 const getSeatConflictMessage = (error: ApiClientError) => {
@@ -23,9 +22,7 @@ const getSeatConflictMessage = (error: ApiClientError) => {
 };
 
 export default function SeatActionsPage() {
-  const [users, setUsers] = useState<User[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedSeatId, setSelectedSeatId] = useState("");
   const [currentSeat, setCurrentSeat] = useState<CurrentSeat | null>(null);
 
@@ -39,68 +36,50 @@ export default function SeatActionsPage() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    const loadMasterData = async () => {
+    const loadData = async () => {
       try {
         setLoadingInitial(true);
+        setLoadingCurrentSeat(true);
         setError("");
-        const [usersData, seatsData] = await Promise.all([getUsers(), getSeats()]);
-        setUsers(usersData);
+
+        const [seatsData, currentSeatData] = await Promise.all([
+          getSeats(),
+          getCurrentSeat().catch((err) => {
+            if (err instanceof ApiClientError && err.status === 404 && err.code === "CURRENT_SEAT_NOT_FOUND") {
+              return null;
+            }
+            throw err;
+          }),
+        ]);
+
         setSeats(seatsData);
+        setCurrentSeat(currentSeatData);
       } catch (err) {
         if (err instanceof ApiClientError) {
           setError(err.message);
         } else {
-          setError("社員または座席データの取得に失敗しました");
+          setError("座席データまたは現在位置の取得に失敗しました");
         }
       } finally {
+        setLoadingCurrentSeat(false);
         setLoadingInitial(false);
       }
     };
 
-    void loadMasterData();
+    void loadData();
   }, []);
 
-  useEffect(() => {
-    const loadCurrentSeat = async () => {
-      if (!selectedUserId) {
-        setCurrentSeat(null);
-        return;
-      }
-
-      try {
-        setLoadingCurrentSeat(true);
-        const data = await getCurrentSeat(Number(selectedUserId));
-        setCurrentSeat(data);
-      } catch (err) {
-        if (err instanceof ApiClientError && err.status === 404 && err.code === "CURRENT_SEAT_NOT_FOUND") {
-          setCurrentSeat(null);
-          return;
-        }
-
-        if (err instanceof ApiClientError) {
-          setError(err.message);
-        } else {
-          setError("現在の在席情報の取得に失敗しました");
-        }
-      } finally {
-        setLoadingCurrentSeat(false);
-      }
-    };
-
-    void loadCurrentSeat();
-  }, [selectedUserId]);
-
   const canSubmitSeat = useMemo(() => {
-    return !!selectedUserId && !!selectedSeatId && !submittingSeat && !submittingLeave;
-  }, [selectedSeatId, selectedUserId, submittingLeave, submittingSeat]);
+    return !!selectedSeatId && !submittingSeat && !submittingLeave;
+  }, [selectedSeatId, submittingLeave, submittingSeat]);
 
   const canSubmitLeave = useMemo(() => {
-    return !!selectedUserId && !submittingSeat && !submittingLeave;
-  }, [selectedUserId, submittingLeave, submittingSeat]);
+    return !submittingSeat && !submittingLeave;
+  }, [submittingLeave, submittingSeat]);
 
   const onRegisterSeat = async () => {
-    if (!selectedUserId || !selectedSeatId) {
-      setError("社員と座席を選択してください");
+    if (!selectedSeatId) {
+      setError("座席を選択してください");
       return;
     }
 
@@ -111,11 +90,11 @@ export default function SeatActionsPage() {
     try {
       setSubmittingSeat(true);
       await registerCurrentSeat({
-        userId: Number(selectedUserId),
         seatId: Number(selectedSeatId),
       });
 
-      const latest = await getCurrentSeat(Number(selectedUserId));
+      setLoadingCurrentSeat(true);
+      const latest = await getCurrentSeat();
       setCurrentSeat(latest);
       setNotice("着席登録が完了しました");
     } catch (err) {
@@ -130,23 +109,19 @@ export default function SeatActionsPage() {
         setError("着席登録に失敗しました");
       }
     } finally {
+      setLoadingCurrentSeat(false);
       setSubmittingSeat(false);
     }
   };
 
   const onLeaveSeat = async () => {
-    if (!selectedUserId) {
-      setError("社員を選択してください");
-      return;
-    }
-
     setError("");
     setConflict("");
     setNotice("");
 
     try {
       setSubmittingLeave(true);
-      await leaveCurrentSeat({ userId: Number(selectedUserId) });
+      await leaveCurrentSeat();
       setCurrentSeat(null);
       setNotice("退席登録が完了しました");
     } catch (err) {
@@ -182,18 +157,6 @@ export default function SeatActionsPage() {
         {!loadingInitial && (
           <section className={styles.panel}>
             <label className={styles.field}>
-              <span>社員</span>
-              <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
-                <option value="">社員を選択してください</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} (ID: {user.id})
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className={styles.field}>
               <span>座席</span>
               <select value={selectedSeatId} onChange={(e) => setSelectedSeatId(e.target.value)}>
                 <option value="">座席を選択してください</option>
@@ -221,7 +184,7 @@ export default function SeatActionsPage() {
           </section>
         )}
 
-        {!loadingInitial && selectedUserId && (
+        {!loadingInitial && (
           <section className={styles.currentSeat}>
             <h2>現在の在席情報</h2>
             {loadingCurrentSeat && <p className={styles.message}>現在位置を確認中です...</p>}
@@ -246,7 +209,7 @@ export default function SeatActionsPage() {
               </dl>
             )}
             {!loadingCurrentSeat && !currentSeat && (
-              <p className={styles.message}>この社員は現在退席状態です</p>
+              <p className={styles.message}>あなたは現在退席状態です</p>
             )}
           </section>
         )}
