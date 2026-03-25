@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/lib/api";
-import { getLoggedInUserName, hasAccessToken } from "@/lib/api/client";
+import { getLoggedInUserName, hasAccessToken, isAdminUser } from "@/lib/api/client";
 import styles from "./global-header-nav.module.css";
 
 type NavItem = {
@@ -14,7 +14,6 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "トップ" },
   { href: "/users", label: "社員一覧" },
-  { href: "/users/new", label: "社員登録" },
   { href: "/seat-actions", label: "座席操作" },
   { href: "/current-seat-lookup", label: "現在位置照会" },
 ];
@@ -23,6 +22,7 @@ export default function GlobalHeaderNav() {
   const pathname = usePathname();
   const router = useRouter();
   const loggedIn = hasAccessToken();
+  const isAdmin = loggedIn && isAdminUser();
   const userName = getLoggedInUserName();
 
   if (pathname === "/login") {
@@ -63,6 +63,15 @@ export default function GlobalHeaderNav() {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              href="/users/new"
+              aria-current={pathname === "/users/new" ? "page" : undefined}
+              className={pathname === "/users/new" ? `${styles.link} ${styles.active}` : styles.link}
+            >
+              社員登録
+            </Link>
+          )}
           <button
             type="button"
             onClick={loggedIn ? onLogout : onLogin}

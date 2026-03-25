@@ -34,7 +34,7 @@ public class LoginResponse {
     public Integer getRoleCode() {
         return roleCode;
     }
-
+    
     public String getUserName() {
         return userName;
     }
