@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiClientError, registerUser } from "@/lib/api";
-import { hasAccessToken } from "@/lib/api/client";
+import { hasAccessToken, isAdminUser } from "@/lib/api/client";
 import type { UserRegisterRequest } from "@/types/api";
 import styles from "./users-new-page.module.css";
 
@@ -81,6 +81,11 @@ export default function NewUserPage() {
 
     if (!loggedIn) {
       router.replace("/login");
+      return;
+    }
+
+    if (!isAdminUser()) {
+      router.replace("/users");
     }
   }, [router]);
 
@@ -131,6 +136,11 @@ export default function NewUserPage() {
       router.push("/users");
     } catch (err) {
       if (err instanceof ApiClientError) {
+        if (err.status === 403) {
+          router.replace("/users");
+          return;
+        }
+
         const serverFieldErrors = toServerFieldErrors(err);
         setFieldErrors(serverFieldErrors);
 
