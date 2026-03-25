@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ApiClientError,
   getCurrentSeat,
@@ -8,6 +9,7 @@ import {
   leaveCurrentSeat,
   registerCurrentSeat,
 } from "@/lib/api";
+import { hasAccessToken } from "@/lib/api/client";
 import type { CurrentSeat, Seat } from "@/types/api";
 import styles from "./seat-actions-page.module.css";
 
@@ -21,6 +23,7 @@ const getSeatConflictMessage = (error: ApiClientError) => {
 };
 
 export default function SeatActionsPage() {
+  const router = useRouter();
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeatId, setSelectedSeatId] = useState("");
   const [currentSeat, setCurrentSeat] = useState<CurrentSeat | null>(null);
@@ -35,6 +38,11 @@ export default function SeatActionsPage() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
+    if (!hasAccessToken()) {
+      router.replace("/login");
+      return;
+    }
+
     const loadData = async () => {
       try {
         setLoadingInitial(true);
@@ -54,6 +62,11 @@ export default function SeatActionsPage() {
         setSeats(seatsData);
         setCurrentSeat(currentSeatData);
       } catch (err) {
+        if (err instanceof ApiClientError && err.status === 401) {
+          router.replace("/login");
+          return;
+        }
+
         if (err instanceof ApiClientError) {
           setError(err.message);
         } else {
@@ -66,7 +79,7 @@ export default function SeatActionsPage() {
     };
 
     void loadData();
-  }, []);
+  }, [router]);
 
   const canSubmitSeat = useMemo(() => {
     return !!selectedSeatId && !submittingSeat && !submittingLeave;
@@ -102,6 +115,11 @@ export default function SeatActionsPage() {
         return;
       }
 
+      if (err instanceof ApiClientError && err.status === 401) {
+        router.replace("/login");
+        return;
+      }
+
       if (err instanceof ApiClientError) {
         setError(err.message);
       } else {
@@ -124,6 +142,11 @@ export default function SeatActionsPage() {
       setCurrentSeat(null);
       setNotice("退席登録が完了しました");
     } catch (err) {
+      if (err instanceof ApiClientError && err.status === 401) {
+        router.replace("/login");
+        return;
+      }
+
       if (err instanceof ApiClientError) {
         setError(err.message);
       } else {

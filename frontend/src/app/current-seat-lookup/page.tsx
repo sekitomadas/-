@@ -2,7 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ApiClientError, getAllCurrentSeats, getCurrentSeatByUserId } from "@/lib/api";
+import { hasAccessToken } from "@/lib/api/client";
 import type { CurrentSeat } from "@/types/api";
 import styles from "./current-seat-lookup-page.module.css";
 
@@ -11,6 +13,7 @@ const isPositiveInteger = (value: string) => {
 };
 
 export default function CurrentSeatLookupPage() {
+  const router = useRouter();
   const [userIdInput, setUserIdInput] = useState("");
   const [submittedUserId, setSubmittedUserId] = useState<number | null>(null);
   const [results, setResults] = useState<CurrentSeat[]>([]);
@@ -36,6 +39,11 @@ export default function CurrentSeatLookupPage() {
       }
     } catch (err) {
       setResults([]);
+      if (err instanceof ApiClientError && err.status === 401) {
+        router.replace("/login");
+        return;
+      }
+
       if (err instanceof ApiClientError && err.status >= 500) {
         setErrorMessage("サーバーエラーが発生しました。時間をおいて再試行してください。");
       } else if (err instanceof ApiClientError) {
@@ -58,6 +66,11 @@ export default function CurrentSeatLookupPage() {
       const data = await getCurrentSeatByUserId(userId);
       setResults([data]);
     } catch (err) {
+      if (err instanceof ApiClientError && err.status === 401) {
+        router.replace("/login");
+        return;
+      }
+
       if (err instanceof ApiClientError && err.status === 404) {
         setEmptyMessage(`userId=${userId} の現在位置は登録されていません。`);
       } else if (err instanceof ApiClientError && err.status >= 500) {
@@ -73,6 +86,11 @@ export default function CurrentSeatLookupPage() {
   };
 
   useEffect(() => {
+    if (!hasAccessToken()) {
+      router.replace("/login");
+      return;
+    }
+
     const loadInitial = async () => {
       clearMessages();
       setSubmittedUserId(null);
@@ -86,6 +104,11 @@ export default function CurrentSeatLookupPage() {
         }
       } catch (err) {
         setResults([]);
+        if (err instanceof ApiClientError && err.status === 401) {
+          router.replace("/login");
+          return;
+        }
+
         if (err instanceof ApiClientError && err.status >= 500) {
           setErrorMessage("サーバーエラーが発生しました。時間をおいて再試行してください。");
         } else if (err instanceof ApiClientError) {
@@ -99,7 +122,7 @@ export default function CurrentSeatLookupPage() {
     };
 
     void loadInitial();
-  }, []);
+  }, [router]);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

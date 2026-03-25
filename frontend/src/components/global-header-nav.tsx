@@ -17,13 +17,20 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/users/new", label: "社員登録" },
   { href: "/seat-actions", label: "座席操作" },
   { href: "/current-seat-lookup", label: "現在位置照会" },
-  { href: "/login", label: "ログイン" },
 ];
 
 export default function GlobalHeaderNav() {
   const pathname = usePathname();
   const router = useRouter();
   const loggedIn = hasAccessToken();
+
+  if (pathname === "/login") {
+    return null;
+  }
+
+  const onLogin = () => {
+    router.push("/login");
+  };
 
   const onLogout = () => {
     logout();
@@ -50,11 +57,14 @@ export default function GlobalHeaderNav() {
               </Link>
             );
           })}
-          {loggedIn && (
-            <button type="button" onClick={onLogout} className={styles.logoutButton}>
-              ログアウト
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={loggedIn ? onLogout : onLogin}
+            className={styles.logoutButton}
+            aria-label={loggedIn ? "ログアウト" : "ログイン"}
+          >
+            {loggedIn ? "ログアウト" : "ログイン"}
+          </button>
         </nav>
       </div>
     </header>
