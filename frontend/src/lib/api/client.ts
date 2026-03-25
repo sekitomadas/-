@@ -5,6 +5,8 @@ const DEFAULT_HEADERS = {
 } as const;
 
 const ACCESS_TOKEN_STORAGE_KEY = "officenavi_access_token";
+const ROLE_CODE_STORAGE_KEY = "officenavi_role_code";
+const ROLE_ADMIN = 0;
 
 export class ApiClientError extends Error {
   status: number;
@@ -31,6 +33,46 @@ const getAccessToken = () => {
 
 export const hasAccessToken = () => {
   return !!getAccessToken();
+};
+
+const getRoleCode = (): number | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const roleCodeRaw = window.localStorage.getItem(ROLE_CODE_STORAGE_KEY);
+  if (roleCodeRaw === null) {
+    return null;
+  }
+
+  const roleCode = roleCodeRaw.trim();
+  if (!/^\d+$/.test(roleCode)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(roleCode, 10);
+  if (!Number.isSafeInteger(parsed)) {
+    return null;
+  }
+
+  return parsed;
+};
+
+export const setRoleCode = (roleCode: number | null) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (roleCode === null) {
+    window.localStorage.removeItem(ROLE_CODE_STORAGE_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(ROLE_CODE_STORAGE_KEY, String(roleCode));
+};
+
+export const isAdminUser = () => {
+  return getRoleCode() === ROLE_ADMIN;
 };
 
 export const setAccessToken = (token: string | null) => {
@@ -103,6 +145,7 @@ export const apiRequest = async <T>(path: string, init?: RequestInit): Promise<T
   if (!response.ok) {
     if (response.status === 401) {
       setAccessToken(null);
+      setRoleCode(null);
     }
     throw new ApiClientError(response.status, toApiErrorResponse(body as ApiErrorResponse | null));
   }
