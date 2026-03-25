@@ -46,7 +46,7 @@ export default function GlobalHeaderNav() {
         </Link>
         <nav className={styles.nav} aria-label="global">
           {loggedIn && (
-            <span className={styles.userStatus} aria-label="ログイン中ユーザー">
+            <span className={styles.userStatus} aria-label={`ログイン中ユーザー: ${userName ?? "ユーザ"}`}>
               ログイン中: {userName ?? "ユーザ"}
             </span>
           )}
