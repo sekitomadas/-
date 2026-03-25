@@ -37,6 +37,11 @@ public class AuthService {
 
         String accessToken = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRoleCode());
 
-        return new LoginResponse(accessToken, "Bearer", jwtTokenProvider.getExpirationSeconds(), user.getRoleCode());
+        return new LoginResponse(
+                accessToken,
+                "Bearer",
+                jwtTokenProvider.getExpirationSeconds(),
+                user.getRoleCode(),
+                user.getName());
     }
 }

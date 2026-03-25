@@ -5,6 +5,7 @@ const DEFAULT_HEADERS = {
 } as const;
 
 const ACCESS_TOKEN_STORAGE_KEY = "officenavi_access_token";
+const LOGGED_IN_USER_NAME_STORAGE_KEY = "officenavi_logged_in_user_name";
 const ROLE_CODE_STORAGE_KEY = "officenavi_role_code";
 const ROLE_ADMIN = 0;
 
@@ -88,6 +89,33 @@ export const setAccessToken = (token: string | null) => {
   window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
 };
 
+export const getLoggedInUserName = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const userName = window.localStorage.getItem(LOGGED_IN_USER_NAME_STORAGE_KEY);
+  if (userName === null) {
+    return null;
+  }
+
+  const normalized = userName.trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
+export const setLoggedInUserName = (userName: string | null) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!userName || userName.trim().length === 0) {
+    window.localStorage.removeItem(LOGGED_IN_USER_NAME_STORAGE_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(LOGGED_IN_USER_NAME_STORAGE_KEY, userName.trim());
+};
+
 const getApiBaseUrl = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -145,6 +173,7 @@ export const apiRequest = async <T>(path: string, init?: RequestInit): Promise<T
   if (!response.ok) {
     if (response.status === 401) {
       setAccessToken(null);
+      setLoggedInUserName(null);
       setRoleCode(null);
     }
     throw new ApiClientError(response.status, toApiErrorResponse(body as ApiErrorResponse | null));
