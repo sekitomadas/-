@@ -40,13 +40,22 @@ const getRoleCode = (): number | null => {
     return null;
   }
 
-  const roleCode = window.localStorage.getItem(ROLE_CODE_STORAGE_KEY);
-  if (roleCode === null) {
+  const roleCodeRaw = window.localStorage.getItem(ROLE_CODE_STORAGE_KEY);
+  if (roleCodeRaw === null) {
     return null;
   }
 
-  const parsed = Number(roleCode);
-  return Number.isNaN(parsed) ? null : parsed;
+  const roleCode = roleCodeRaw.trim();
+  if (!/^\d+$/.test(roleCode)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(roleCode, 10);
+  if (!Number.isSafeInteger(parsed)) {
+    return null;
+  }
+
+  return parsed;
 };
 
 export const setRoleCode = (roleCode: number | null) => {
