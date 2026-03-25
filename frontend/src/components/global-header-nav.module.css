@@ -32,6 +32,17 @@
   gap: 8px;
 }
 
+.userStatus {
+  border-radius: 999px;
+  border: 1px solid #d9e2ec;
+  background: #f0fdf4;
+  color: #14532d;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .link,
 .logoutButton {
   border-radius: 999px;

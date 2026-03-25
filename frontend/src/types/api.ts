@@ -13,6 +13,8 @@ export type LoginResponse = {
   accessToken: string;
   tokenType: string;
   expiresIn: number;
+  roleCode: number;
+  userName: string;
 };
 
 export type UserRegisterRequest = {

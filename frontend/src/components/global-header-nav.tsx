@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/lib/api";
-import { hasAccessToken } from "@/lib/api/client";
+import { getLoggedInUserName, hasAccessToken } from "@/lib/api/client";
 import styles from "./global-header-nav.module.css";
 
 type NavItem = {
@@ -23,6 +23,7 @@ export default function GlobalHeaderNav() {
   const pathname = usePathname();
   const router = useRouter();
   const loggedIn = hasAccessToken();
+  const userName = getLoggedInUserName();
 
   if (pathname === "/login") {
     return null;
@@ -44,6 +45,11 @@ export default function GlobalHeaderNav() {
           OfficeNavi
         </Link>
         <nav className={styles.nav} aria-label="global">
+          {loggedIn && (
+            <span className={styles.userStatus} aria-label="ログイン中ユーザー">
+              ログイン中: {userName ?? "ユーザ"}
+            </span>
+          )}
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             return (
