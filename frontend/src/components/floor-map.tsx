@@ -71,11 +71,6 @@ export default function FloorMap({ location, seats, occupiedSeats }: FloorMapPro
     setIsDragging(false);
   };
 
-  const handleSeatClick = (seat: Seat) => {
-    // 後で座席選択セクションで使う
-    console.log("Selected seat:", seat);
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -167,7 +162,7 @@ export default function FloorMap({ location, seats, occupiedSeats }: FloorMapPro
             const secondaryLabelY = coord.shape === "rect" ? coord.y + 36 : coord.y + seatRadius + 8;
             const secondaryText = occupied ? formatOccupantName(occupied.userName) : String(coord.number);
             return (
-              <g key={coord.seatId} onClick={() => handleSeatClick(seats.find((s) => s.id === coord.seatId)!)}>
+              <g key={coord.seatId}>
                 {occupied && <title>{occupied.userName}</title>}
                 {coord.shape === "rect" ? (
                   <rect

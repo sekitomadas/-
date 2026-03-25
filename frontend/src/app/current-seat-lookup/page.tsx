@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ApiClientError, getAllCurrentSeats, getCurrentSeatByUserId, getSeats } from "@/lib/api";
 import { hasAccessToken } from "@/lib/api/client";
@@ -10,6 +10,10 @@ import FloorMap from "@/components/floor-map";
 
 const isPositiveInteger = (value: string) => {
   return /^[1-9][0-9]*$/.test(value);
+};
+
+const normalizeLocation = (location?: string | null) => {
+  return location && location.trim() ? location : "場所未設定";
 };
 
 export default function CurrentSeatLookupPage() {
@@ -36,6 +40,7 @@ export default function CurrentSeatLookupPage() {
     try {
       const data = await getAllCurrentSeats();
       setResults(data);
+      setOccupiedSeats(data);
       if (data.length === 0) {
         setEmptyMessage("現在座席が登録されているユーザーはいません。");
       }
@@ -162,12 +167,30 @@ export default function CurrentSeatLookupPage() {
     await lookupByUserId(submittedUserId);
   };
 
-  const locationGroups = allSeats.reduce<Record<string, Seat[]>>((acc, seat) => {
-    const key = seat.location || "場所未設定";
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(seat);
-    return acc;
-  }, {});
+  const locationGroups = useMemo(
+    () => allSeats.reduce<Record<string, Seat[]>>((acc, seat) => {
+      const key = normalizeLocation(seat.location);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(seat);
+      return acc;
+    }, {}),
+    [allSeats]
+  );
+
+  const seatLocationKeyById = useMemo(
+    () => new Map(allSeats.map((seat) => [seat.id, normalizeLocation(seat.location)])),
+    [allSeats]
+  );
+
+  const occupiedSeatsByLocation = useMemo(
+    () => occupiedSeats.reduce<Record<string, CurrentSeat[]>>((acc, currentSeat) => {
+      const key = seatLocationKeyById.get(currentSeat.seat.id) ?? normalizeLocation(currentSeat.seat.location);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(currentSeat);
+      return acc;
+    }, {}),
+    [occupiedSeats, seatLocationKeyById]
+  );
 
   return (
     <div className={styles.page}>
@@ -187,10 +210,7 @@ export default function CurrentSeatLookupPage() {
                 key={location}
                 location={location}
                 seats={locationSeats}
-                occupiedSeats={occupiedSeats.filter((cs) => {
-                  const seatLocation = locationSeats.find((s) => s.id === cs.seat.id)?.location;
-                  return seatLocation === location;
-                })}
+                occupiedSeats={occupiedSeatsByLocation[location] ?? []}
               />
             ))}
           </section>

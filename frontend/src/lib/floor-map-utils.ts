@@ -61,14 +61,14 @@ const GRID_CIRCLE_SEAT_RADIUS = 20;
 
 const S_MAX_SEATS = 20; // 4列 x 5行
 const A_MAX_SEATS = 60; // 4人テーブル x 15卓
-const B_MAX_SEATS = 15; // 1列 x 20行
+const B_MAX_SEATS = 20; // 1列 x 20行
 
 const S_SEAT_ROW_SLOTS = [1, 2.2, 5, 6.2, 9];
 const S_TABLE_ROW_SLOTS = [0, 3, 4, 7, 8];
 
 /**
  * 座席名から section と number を抽出
- * 例: "S-116" → { section: "S", number: 116 }
+ * 例: "S-001" → { section: "S", number: 1 }
  */
 export const parseSeatName = (
   seatName: string
