@@ -193,6 +193,134 @@
   gap: 8px;
 }
 
+.floorMap {
+  display: grid;
+  gap: 16px;
+}
+
+.floorMap > h2 {
+  color: #102a43;
+  font-size: 18px;
+  margin: 0;
+}
+
+.floorGroup {
+  display: grid;
+  gap: 10px;
+}
+
+.floorGroupTitle {
+  color: #486581;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.seatGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.seatAvailable {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 8px;
+  border: 2px solid #10b981;
+  background: #f0fdf4;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.seatAvailable:hover {
+  border-color: #059669;
+  background: #dcfce7;
+  transform: scale(1.05);
+}
+
+.seatOccupied {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 8px;
+  border: 2px solid #ef4444;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.seatName {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.seatUser {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.legendAvailable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #486581;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.legendAvailable::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #10b981;
+  background: #f0fdf4;
+}
+
+.legendOccupied {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #486581;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.legendOccupied::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #ef4444;
+  background: #fef2f2;
+}
+
 @media (max-width: 680px) {
   .header {
     flex-direction: column;

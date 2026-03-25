@@ -7,7 +7,8 @@ import { ApiClientError, getAllCurrentSeats, getCurrentSeatByUserId } from "@/li
 import { hasAccessToken } from "@/lib/api/client";
 import type { CurrentSeat } from "@/types/api";
 import styles from "./current-seat-lookup-page.module.css";
-
+import { getSeats } from "@/lib/api";
+import type { Seat } from "@/types/api";
 const isPositiveInteger = (value: string) => {
   return /^[1-9][0-9]*$/.test(value);
 };
@@ -20,6 +21,8 @@ export default function CurrentSeatLookupPage() {
   const [loading, setLoading] = useState(false);
   const [emptyMessage, setEmptyMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+    const [allSeats, setAllSeats] = useState<Seat[]>([]);
+    const [occupiedSeats, setOccupiedSeats] = useState<CurrentSeat[]>([]);
 
   const clearMessages = () => {
     setEmptyMessage("");
@@ -97,11 +100,16 @@ export default function CurrentSeatLookupPage() {
       setLoading(true);
 
       try {
-        const data = await getAllCurrentSeats();
-        setResults(data);
-        if (data.length === 0) {
-          setEmptyMessage("現在座席が登録されているユーザーはいません。");
-        }
+          const [seatsData, currentSeats] = await Promise.all([
+            getSeats(),
+            getAllCurrentSeats(),
+          ]);
+          setAllSeats(seatsData);
+          setOccupiedSeats(currentSeats);
+          setResults(currentSeats);
+          if (currentSeats.length === 0) {
+            setEmptyMessage("現在座席が登録されているユーザーはいません。");
+          }
       } catch (err) {
         setResults([]);
         if (err instanceof ApiClientError && err.status === 401) {
@@ -154,6 +162,17 @@ export default function CurrentSeatLookupPage() {
 
     await lookupByUserId(submittedUserId);
   };
+
+    const locationGroups = allSeats.reduce<Record<string, Seat[]>>((acc, seat) => {
+      const key = seat.location || "場所未設定";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(seat);
+      return acc;
+    }, {});
+
+    const occupiedMap = new Map<number, CurrentSeat>(
+      occupiedSeats.map((cs) => [cs.seat.id, cs])
+    );
 
   return (
     <div className={styles.page}>
@@ -231,6 +250,39 @@ export default function CurrentSeatLookupPage() {
             </div>
           </section>
         )}
+
+          {allSeats.length > 0 && (
+            <section className={styles.floorMap}>
+              <h2>フロアマップ</h2>
+              {Object.entries(locationGroups).map(([location, seats]) => (
+                <div key={location} className={styles.floorGroup}>
+                  <h3 className={styles.floorGroupTitle}>{location}</h3>
+                  <div className={styles.seatGrid}>
+                    {seats.map((seat) => {
+                      const occupied = occupiedMap.get(seat.id);
+                      return (
+                        <div
+                          key={seat.id}
+                          className={occupied ? styles.seatOccupied : styles.seatAvailable}
+                          aria-label={occupied ? `${seat.name}: ${occupied.userName}が使用中` : `${seat.name}: 空席`}
+                        >
+                          <span className={styles.seatName}>{seat.name}</span>
+                          {occupied && (
+                            <span className={styles.seatUser}>{occupied.userName}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <div className={styles.legend}>
+                <span className={styles.legendAvailable}>空席</span>
+                <span className={styles.legendOccupied}>使用中</span>
+              </div>
+            </section>
+          )}
+
       </main>
     </div>
   );
