@@ -198,7 +198,12 @@
   gap: 16px;
 }
 
-.floorMap > h2 {
+.floorMapSection {
+  display: grid;
+  gap: 16px;
+}
+
+.floorMapSection > h2 {
   color: #102a43;
   font-size: 18px;
   margin: 0;
