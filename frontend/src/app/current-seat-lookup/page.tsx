@@ -1,15 +1,19 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useEffect } from "react";
+import { FormEvent, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ApiClientError, getAllCurrentSeats, getCurrentSeatByUserId } from "@/lib/api";
+import { ApiClientError, getAllCurrentSeats, getCurrentSeatByUserId, getSeats } from "@/lib/api";
 import { hasAccessToken } from "@/lib/api/client";
-import type { CurrentSeat } from "@/types/api";
+import type { CurrentSeat, Seat } from "@/types/api";
 import styles from "./current-seat-lookup-page.module.css";
+import FloorMap from "@/components/floor-map";
 
 const isPositiveInteger = (value: string) => {
   return /^[1-9][0-9]*$/.test(value);
+};
+
+const normalizeLocation = (location?: string | null) => {
+  return location && location.trim() ? location : "場所未設定";
 };
 
 export default function CurrentSeatLookupPage() {
@@ -20,6 +24,8 @@ export default function CurrentSeatLookupPage() {
   const [loading, setLoading] = useState(false);
   const [emptyMessage, setEmptyMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [allSeats, setAllSeats] = useState<Seat[]>([]);
+  const [occupiedSeats, setOccupiedSeats] = useState<CurrentSeat[]>([]);
 
   const clearMessages = () => {
     setEmptyMessage("");
@@ -34,6 +40,7 @@ export default function CurrentSeatLookupPage() {
     try {
       const data = await getAllCurrentSeats();
       setResults(data);
+      setOccupiedSeats(data);
       if (data.length === 0) {
         setEmptyMessage("現在座席が登録されているユーザーはいません。");
       }
@@ -97,9 +104,14 @@ export default function CurrentSeatLookupPage() {
       setLoading(true);
 
       try {
-        const data = await getAllCurrentSeats();
-        setResults(data);
-        if (data.length === 0) {
+        const [seatsData, currentSeats] = await Promise.all([
+          getSeats(),
+          getAllCurrentSeats(),
+        ]);
+        setAllSeats(seatsData);
+        setOccupiedSeats(currentSeats);
+        setResults(currentSeats);
+        if (currentSeats.length === 0) {
           setEmptyMessage("現在座席が登録されているユーザーはいません。");
         }
       } catch (err) {
@@ -155,6 +167,31 @@ export default function CurrentSeatLookupPage() {
     await lookupByUserId(submittedUserId);
   };
 
+  const locationGroups = useMemo(
+    () => allSeats.reduce<Record<string, Seat[]>>((acc, seat) => {
+      const key = normalizeLocation(seat.location);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(seat);
+      return acc;
+    }, {}),
+    [allSeats]
+  );
+
+  const seatLocationKeyById = useMemo(
+    () => new Map(allSeats.map((seat) => [seat.id, normalizeLocation(seat.location)])),
+    [allSeats]
+  );
+
+  const occupiedSeatsByLocation = useMemo(
+    () => occupiedSeats.reduce<Record<string, CurrentSeat[]>>((acc, currentSeat) => {
+      const key = seatLocationKeyById.get(currentSeat.seat.id) ?? normalizeLocation(currentSeat.seat.location);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(currentSeat);
+      return acc;
+    }, {}),
+    [occupiedSeats, seatLocationKeyById]
+  );
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -165,6 +202,20 @@ export default function CurrentSeatLookupPage() {
           </div>
         </header>
 
+        {allSeats.length > 0 && (
+          <section className={styles.floorMapSection}>
+            <h2>フロアマップ</h2>
+            {Object.entries(locationGroups).map(([location, locationSeats]) => (
+              <FloorMap
+                key={location}
+                location={location}
+                seats={locationSeats}
+                occupiedSeats={occupiedSeatsByLocation[location] ?? []}
+              />
+            ))}
+          </section>
+        )}
+        <h1>座席照会</h1>
         <section className={styles.panel}>
           <form className={styles.form} onSubmit={onSubmit}>
             <label className={styles.field}>
@@ -231,6 +282,7 @@ export default function CurrentSeatLookupPage() {
             </div>
           </section>
         )}
+
       </main>
     </div>
   );
