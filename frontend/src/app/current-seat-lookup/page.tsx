@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useState, useEffect, useMemo } from "react";
+import { FormEvent, useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ApiClientError, getAllCurrentSeats, getCurrentSeatByUserId, getSeats } from "@/lib/api";
+import { ApiClientError, getAllCurrentSeats, getCurrentSeatByUserId, getSeats, registerCurrentSeat } from "@/lib/api";
 import { hasAccessToken } from "@/lib/api/client";
 import type { CurrentSeat, Seat } from "@/types/api";
 import styles from "./current-seat-lookup-page.module.css";
@@ -16,6 +16,15 @@ const normalizeLocation = (location?: string | null) => {
   return location && location.trim() ? location : "場所未設定";
 };
 
+const getSeatConflictMessage = (error: ApiClientError) => {
+  const detail = error.details.find((item) => item.field === "seatId");
+  if (detail?.reason) {
+    return `${detail.reason}。別の座席を選択して再試行してください。`;
+  }
+
+  return "指定された座席は既に利用中です。別の座席を選択して再試行してください。";
+};
+
 export default function CurrentSeatLookupPage() {
   const router = useRouter();
   const [userIdInput, setUserIdInput] = useState("");
@@ -24,12 +33,20 @@ export default function CurrentSeatLookupPage() {
   const [loading, setLoading] = useState(false);
   const [emptyMessage, setEmptyMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [noticeMessage, setNoticeMessage] = useState("");
   const [allSeats, setAllSeats] = useState<Seat[]>([]);
   const [occupiedSeats, setOccupiedSeats] = useState<CurrentSeat[]>([]);
+  const [confirmingSeat, setConfirmingSeat] = useState<Seat | null>(null);
+  const [registeringSeatId, setRegisteringSeatId] = useState<number | null>(null);
+
+  const seatRegisterDialogRef = useRef<HTMLDivElement>(null);
+  const seatRegisterCancelButtonRef = useRef<HTMLButtonElement>(null);
+  const seatRegisterConfirmButtonRef = useRef<HTMLButtonElement>(null);
 
   const clearMessages = () => {
     setEmptyMessage("");
     setErrorMessage("");
+    setNoticeMessage("");
   };
 
   const lookupAll = async () => {
@@ -91,6 +108,12 @@ export default function CurrentSeatLookupPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (confirmingSeat) {
+      seatRegisterCancelButtonRef.current?.focus();
+    }
+  }, [confirmingSeat]);
 
   useEffect(() => {
     if (!hasAccessToken()) {
@@ -167,6 +190,76 @@ export default function CurrentSeatLookupPage() {
     await lookupByUserId(submittedUserId);
   };
 
+  const onSelectAvailableSeat = (seat: Seat) => {
+    if (registeringSeatId !== null) return;
+    clearMessages();
+    setConfirmingSeat(seat);
+  };
+
+  const onCancelSeatRegister = () => {
+    if (registeringSeatId !== null) return;
+    setConfirmingSeat(null);
+  };
+
+  const onConfirmSeatRegister = async () => {
+    if (!confirmingSeat || registeringSeatId !== null) return;
+
+    const targetSeat = confirmingSeat;
+    setRegisteringSeatId(targetSeat.id);
+    setErrorMessage("");
+    setNoticeMessage("");
+
+    // ① 在席登録
+    try {
+      await registerCurrentSeat({ seatId: targetSeat.id });
+    } catch (err) {
+      if (err instanceof ApiClientError && err.status === 409) {
+        setErrorMessage(getSeatConflictMessage(err));
+      } else if (err instanceof ApiClientError && err.status === 401) {
+        router.replace("/login");
+        return;
+      } else if (err instanceof ApiClientError) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage("在席登録に失敗しました。");
+      }
+      setRegisteringSeatId(null);
+      setConfirmingSeat(null);
+      return;
+    }
+
+    // ② 登録成功 → ダイアログを閉じて成功通知
+    setNoticeMessage(`${targetSeat.name} に着席登録しました。`);
+    setRegisteringSeatId(null);
+    setConfirmingSeat(null);
+
+    // ③ フロアマップ / 照会結果を最新化（失敗しても登録成功は確定済み）
+    try {
+      const latestSeats = await getAllCurrentSeats();
+      setOccupiedSeats(latestSeats);
+      if (submittedUserId === null) {
+        setResults(latestSeats);
+      }
+    } catch {
+      setErrorMessage("表示の更新に失敗しました。ページを再読み込みしてください。");
+    }
+  };
+
+  const onSeatRegisterDialogKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") {
+      onCancelSeatRegister();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const cancel = seatRegisterCancelButtonRef.current;
+    const confirm = seatRegisterConfirmButtonRef.current;
+    if (!cancel || !confirm) return;
+    if (e.shiftKey ? document.activeElement === cancel : document.activeElement === confirm) {
+      e.preventDefault();
+      (e.shiftKey ? confirm : cancel).focus();
+    }
+  };
+
   const locationGroups = useMemo(
     () => allSeats.reduce<Record<string, Seat[]>>((acc, seat) => {
       const key = normalizeLocation(seat.location);
@@ -211,6 +304,8 @@ export default function CurrentSeatLookupPage() {
                 location={location}
                 seats={locationSeats}
                 occupiedSeats={occupiedSeatsByLocation[location] ?? []}
+                onSelectAvailableSeat={onSelectAvailableSeat}
+                selectingSeatId={registeringSeatId}
               />
             ))}
           </section>
@@ -246,6 +341,8 @@ export default function CurrentSeatLookupPage() {
             )}
           </section>
         )}
+
+        {noticeMessage && <p className={styles.noticeBox}>{noticeMessage}</p>}
 
         {emptyMessage && <p className={styles.empty}>{emptyMessage}</p>}
 
@@ -284,6 +381,34 @@ export default function CurrentSeatLookupPage() {
         )}
 
       </main>
+
+      {confirmingSeat && (
+        <div className={styles.modalOverlay} role="presentation" onClick={onCancelSeatRegister}>
+          <div
+            ref={seatRegisterDialogRef}
+          className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="seat-register-title"
+            aria-describedby="seat-register-description"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={onSeatRegisterDialogKeyDown}
+          >
+            <h2 id="seat-register-title">ここに座りますか？</h2>
+            <p id="seat-register-description">
+              対象座席: {confirmingSeat.name}（{normalizeLocation(confirmingSeat.location)}）
+            </p>
+            <div className={styles.modalActions}>
+              <button ref={seatRegisterCancelButtonRef} type="button" className={styles.retry} onClick={onCancelSeatRegister} disabled={registeringSeatId !== null}>
+                いいえ
+              </button>
+              <button ref={seatRegisterConfirmButtonRef} type="button" className={styles.primary} onClick={onConfirmSeatRegister} disabled={registeringSeatId !== null}>
+                {registeringSeatId !== null ? "登録中..." : "はい"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
