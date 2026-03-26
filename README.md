@@ -178,7 +178,8 @@
 
 - フロントエンドは `frontend/` に配置
 - 技術スタックは Next.js（App Router）+ TypeScript
-- 主要画面は `/`, `/login`, `/users`, `/users/new`, `/seat-actions`, `/current-seat-lookup`
+- 主要画面は `/login`, `/users`, `/users/new`, `/seat-actions`, `/current-seat-lookup`
+- `/` はログイン状態に応じて `/users` または `/login` へ自動遷移するエントリーポイント
 - 詳細は `frontend/README.md` を参照
 
 ### 起動手順
