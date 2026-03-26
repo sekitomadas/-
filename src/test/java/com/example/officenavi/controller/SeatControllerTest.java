@@ -40,4 +40,14 @@ class SeatControllerTest {
                 .andExpect(jsonPath("$[1].location").value("3F East"));
 
     }
+
+    @Test
+    void getSeats_whenNoSeat_shouldReturn200AndEmptyArray() throws Exception {
+        when(seatService.getSeats()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/seats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
 }
