@@ -12,13 +12,15 @@ interface FloorMapProps {
   location: string;
   seats: Seat[];
   occupiedSeats: CurrentSeat[];
+  onSelectAvailableSeat?: (seat: Seat) => void;
+  selectingSeatId?: number | null;
 }
 
 const formatOccupantName = (name: string, maxLength = 6): string => {
   return name.length > maxLength ? `${name.slice(0, maxLength)}…` : name;
 };
 
-export default function FloorMap({ location, seats, occupiedSeats }: FloorMapProps) {
+export default function FloorMap({ location, seats, occupiedSeats, onSelectAvailableSeat, selectingSeatId = null }: FloorMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +37,11 @@ export default function FloorMap({ location, seats, occupiedSeats }: FloorMapPro
   const occupiedMap = useMemo(
     () => new Map<number, CurrentSeat>(occupiedSeats.map((cs) => [cs.seat.id, cs])),
     [occupiedSeats]
+  );
+
+  const seatById = useMemo(
+    () => new Map<number, Seat>(seats.map((seat) => [seat.id, seat])),
+    [seats]
   );
 
   // マウスホイールでズーム
@@ -156,13 +163,25 @@ export default function FloorMap({ location, seats, occupiedSeats }: FloorMapPro
           {/* 座席 */}
           {seatCoordinates.map((coord) => {
             const occupied = occupiedMap.get(coord.seatId);
+            const seat = seatById.get(coord.seatId);
+            const isSelectable = !!onSelectAvailableSeat && !occupied && selectingSeatId === null;
             const seatRadius = coord.section === "A" ? SEAT_SIZE.A_SEAT_RADIUS : SEAT_SIZE.GRID_CIRCLE_SEAT_RADIUS;
             const centerX = coord.shape === "rect" ? coord.x + SEAT_SIZE.WIDTH / 2 : coord.x + seatRadius;
             const sectionLabelY = coord.shape === "rect" ? coord.y + 22 : coord.y + seatRadius - 6;
             const secondaryLabelY = coord.shape === "rect" ? coord.y + 36 : coord.y + seatRadius + 8;
             const secondaryText = occupied ? formatOccupantName(occupied.userName) : String(coord.number);
+
+            const handleSeatClick = () => {
+              if (!isSelectable || !seat || !onSelectAvailableSeat) return;
+              onSelectAvailableSeat(seat);
+            };
+
             return (
-              <g key={coord.seatId}>
+              <g
+                key={coord.seatId}
+                onClick={handleSeatClick}
+                className={isSelectable ? styles.seatSelectable : undefined}
+              >
                 {occupied && <title>{occupied.userName}</title>}
                 {coord.shape === "rect" ? (
                   <rect
