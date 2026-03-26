@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/lib/api";
@@ -18,6 +18,40 @@ type AuthState = {
   userName: string | null;
 };
 
+const SERVER_AUTH_SNAPSHOT: AuthState = {
+  loggedIn: false,
+  isAdmin: false,
+  userName: null,
+};
+
+let cachedAuthSnapshot: AuthState = SERVER_AUTH_SNAPSHOT;
+
+const readAuthState = (): AuthState => {
+  const loggedIn = hasAccessToken();
+  return {
+    loggedIn,
+    isAdmin: loggedIn && isAdminUser(),
+    userName: getLoggedInUserName(),
+  };
+};
+
+const getAuthSnapshot = (): AuthState => {
+  const next = readAuthState();
+  if (
+    cachedAuthSnapshot.loggedIn === next.loggedIn
+    && cachedAuthSnapshot.isAdmin === next.isAdmin
+    && cachedAuthSnapshot.userName === next.userName
+  ) {
+    return cachedAuthSnapshot;
+  }
+  cachedAuthSnapshot = next;
+  return cachedAuthSnapshot;
+};
+
+const getServerAuthSnapshot = (): AuthState => SERVER_AUTH_SNAPSHOT;
+
+const subscribeAuth = () => () => {};
+
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "トップ" },
   { href: "/users", label: "社員一覧" },
@@ -28,28 +62,13 @@ const NAV_ITEMS: NavItem[] = [
 export default function GlobalHeaderNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const [authState, setAuthState] = useState<AuthState>({
-    loggedIn: false,
-    isAdmin: false,
-    userName: null,
-  });
+  const authState = useSyncExternalStore(subscribeAuth, getAuthSnapshot, getServerAuthSnapshot);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { loggedIn, isAdmin, userName } = authState;
 
-  const syncAuthStateFromStorage = () => {
-    const loggedIn = hasAccessToken();
-    setAuthState({
-      loggedIn,
-      isAdmin: loggedIn && isAdminUser(),
-      userName: getLoggedInUserName(),
-    });
+  const getNavLinkClassName = (href: string) => {
+    return pathname === href ? `${styles.link} ${styles.active}` : styles.link;
   };
-
-  useEffect(() => {
-    syncAuthStateFromStorage();
-    setIsSubmitting(false);
-    setShowLogoutConfirm(false);
-  }, [pathname]);
 
   const onLogin = useCallback(() => {
     router.push("/login");
@@ -60,22 +79,14 @@ export default function GlobalHeaderNav() {
   }, []);
 
   const onCancelLogout = useCallback(() => {
-    if (isSubmitting) return;
     setShowLogoutConfirm(false);
-  }, [isSubmitting]);
+  }, []);
 
   const onConfirmLogout = useCallback(() => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      logout();
-      setAuthState({ loggedIn: false, isAdmin: false, userName: null });
-      setShowLogoutConfirm(false);
-      router.push("/login");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [isSubmitting, router]);
+    logout();
+    setShowLogoutConfirm(false);
+    router.push("/login");
+  }, [router]);
 
   useEffect(() => {
     if (!showLogoutConfirm) return;
@@ -85,15 +96,11 @@ export default function GlobalHeaderNav() {
         event.preventDefault();
         onCancelLogout();
       }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        onConfirmLogout();
-      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showLogoutConfirm, onCancelLogout, onConfirmLogout]);
+  }, [showLogoutConfirm, onCancelLogout]);
 
   if (pathname === "/login") {
     return null;
@@ -106,9 +113,9 @@ export default function GlobalHeaderNav() {
           OfficeNavi
         </Link>
         <nav className={styles.nav} aria-label="global">
-          {authState.loggedIn && (
-            <span className={styles.userStatus} aria-label={`ログイン中ユーザー: ${authState.userName ?? "ユーザ"}`}>
-              ログイン中: {authState.userName ?? "ユーザ"}
+          {loggedIn && (
+            <span className={styles.userStatus} aria-label={`ログイン中ユーザー: ${userName ?? "ユーザ"}`}>
+              ログイン中: {userName ?? "ユーザ"}
             </span>
           )}
           {NAV_ITEMS.map((item) => {
@@ -118,28 +125,28 @@ export default function GlobalHeaderNav() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={active ? `${styles.link} ${styles.active}` : styles.link}
+                className={getNavLinkClassName(item.href)}
               >
                 {item.label}
               </Link>
             );
           })}
-          {authState.isAdmin && (
+          {isAdmin && (
             <Link
               href="/users/new"
               aria-current={pathname === "/users/new" ? "page" : undefined}
-              className={pathname === "/users/new" ? `${styles.link} ${styles.active}` : styles.link}
+              className={getNavLinkClassName("/users/new")}
             >
               社員登録
             </Link>
           )}
           <button
             type="button"
-            onClick={authState.loggedIn ? onLogoutClick : onLogin}
+            onClick={loggedIn ? onLogoutClick : onLogin}
             className={styles.logoutButton}
-            aria-label={authState.loggedIn ? "ログアウト" : "ログイン"}
+            aria-label={loggedIn ? "ログアウト" : "ログイン"}
           >
-            {authState.loggedIn ? "ログアウト" : "ログイン"}
+            {loggedIn ? "ログアウト" : "ログイン"}
           </button>
         </nav>
       </div>
@@ -151,16 +158,17 @@ export default function GlobalHeaderNav() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="logout-confirm-title"
+            aria-describedby="logout-confirm-description"
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id="logout-confirm-title" className={styles.modalTitle}>ログアウトしますか？</h2>
-            <p className={styles.modalDescription}>未保存の入力内容は失われる可能性があります。</p>
+            <p id="logout-confirm-description" className={styles.modalDescription}>未保存の入力内容は失われる可能性があります。</p>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.cancelButton} onClick={onCancelLogout} disabled={isSubmitting}>
+              <button type="button" className={styles.cancelButton} onClick={onCancelLogout}>
                 いいえ
               </button>
-              <button type="button" className={styles.confirmButton} onClick={onConfirmLogout} disabled={isSubmitting}>
-                {isSubmitting ? "処理中..." : "はい"}
+              <button type="button" className={styles.confirmButton} onClick={onConfirmLogout}>
+                はい
               </button>
             </div>
           </div>
