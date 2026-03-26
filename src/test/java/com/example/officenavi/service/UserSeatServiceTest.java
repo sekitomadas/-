@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -153,6 +154,32 @@ public class UserSeatServiceTest {
         when(userSeatRepository.findCurrentSeatByUserId(USER_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> userSeatService.getCurrentSeat(USER_ID));
+    }
+
+    @Test
+    void getAllCurrentSeats_shouldReturnMappedResponses() {
+        LocalDateTime since = LocalDateTime.now();
+        when(userSeatRepository.findAllCurrentSeats()).thenReturn(List.of(
+                new UserCurrentSeatEntity(1, "山田太郎", 10, "A-01", "3F East", since),
+                new UserCurrentSeatEntity(2, "佐藤花子", 20, "B-10", "4F West", since)));
+
+        List<UserCurrentSeatResponse> responses = userSeatService.getAllCurrentSeats();
+
+        assertEquals(2, responses.size());
+        assertEquals(1, responses.get(0).getUserId());
+        assertEquals("山田太郎", responses.get(0).getUserName());
+        assertEquals(10, responses.get(0).getSeat().getId());
+        assertEquals("A-01", responses.get(0).getSeat().getName());
+        assertEquals("3F East", responses.get(0).getSeat().getLocation());
+    }
+
+    @Test
+    void getAllCurrentSeats_shouldReturnEmptyListWhenNoCurrentSeats() {
+        when(userSeatRepository.findAllCurrentSeats()).thenReturn(List.of());
+
+        List<UserCurrentSeatResponse> responses = userSeatService.getAllCurrentSeats();
+
+        assertEquals(0, responses.size());
     }
 
 }

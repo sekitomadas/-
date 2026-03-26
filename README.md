@@ -256,6 +256,29 @@ npm run build
 
 ---
 
+## テスト方針
+
+バックエンドは `src/test/java` 配下で、主に Controller 層と Service 層の単体テストを実装しています。
+
+### Controller テスト
+
+- `MockMvc` を用いて HTTP ステータスとレスポンス JSON を検証
+- 正常系に加えて、入力バリデーション、認証失敗、`404 Not Found`、`409 Conflict` を確認
+- `ApiExceptionHandler` を含めたエラーレスポンス形式を固定
+
+### Service テスト
+
+- Repository / Encoder / JWT 生成器をモック化して業務ロジックを検証
+- 正常系に加えて、存在チェック、競合、認証失敗などの分岐を確認
+- 在席登録・退席・現在位置照会など、主要ユースケースの戻り値変換も検証
+
+### 実行方法
+
+- 全件実行: `./mvnw test`
+- 個別実行例: `./mvnw -Dtest=AuthControllerTest test`
+
+---
+
 ## リポジトリ構成
 
 ```text
