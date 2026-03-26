@@ -53,7 +53,6 @@ const getServerAuthSnapshot = (): AuthState => SERVER_AUTH_SNAPSHOT;
 const subscribeAuth = () => () => {};
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "トップ" },
   { href: "/users", label: "社員一覧" },
   { href: "/seat-actions", label: "座席操作" },
   { href: "/current-seat-lookup", label: "現在位置照会" },
@@ -109,7 +108,7 @@ export default function GlobalHeaderNav() {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        <Link href="/" className={styles.brand}>
+        <Link href="/users" className={styles.brand}>
           OfficeNavi
         </Link>
         <nav className={styles.nav} aria-label="global">

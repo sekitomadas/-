@@ -1,19 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { hasAccessToken } from "@/lib/api/client";
 import styles from "./page.module.css";
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (hasAccessToken()) {
+      router.replace("/users");
+      return;
+    }
+
+    router.replace("/login");
+  }, [router]);
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <div className={styles.hero}>
-          <p className={styles.kicker}>OfficeNavi</p>
-          <h1>フロント実装をここから開始</h1>
-          <p>
-            社員一覧の確認と社員登録からMVPを進めます。APIクライアント層を利用して、画面から
-            バックエンドへ接続します。
-          </p>
-        </div>
+        <p className={styles.message}>ページを移動しています...</p>
       </main>
     </div>
   );

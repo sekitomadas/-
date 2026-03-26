@@ -1,104 +1,28 @@
 .page {
-  display: grid;
-  place-items: center;
   min-height: 100%;
-  padding: 24px;
+  padding: 24px 16px 40px;
   background:
-    radial-gradient(circle at 15% 20%, #ffd6a5 0%, transparent 40%),
-    radial-gradient(circle at 85% 80%, #bde0fe 0%, transparent 42%),
-    #f8fafc;
+    radial-gradient(circle at 10% 12%, #ffd8ad 0%, transparent 28%),
+    radial-gradient(circle at 88% 82%, #b8d9ff 0%, transparent 30%),
+    linear-gradient(180deg, #fffaf2 0%, #f6f9fc 52%, #edf4fb 100%);
 }
 
 .main {
-  width: min(760px, 100%);
-  border-radius: 24px;
-  border: 1px solid #dbe4ee;
-  background: #ffffffcc;
-  backdrop-filter: blur(6px);
-  padding: clamp(24px, 5vw, 48px);
-  box-shadow: 0 24px 50px #00000014;
+  width: min(680px, 100%);
+  margin: 0 auto;
   display: grid;
-  gap: 28px;
+  place-items: center;
+  min-height: 72vh;
 }
 
-.hero {
-  display: grid;
-  gap: 14px;
-}
-
-.kicker {
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  color: #3d5972;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.hero h1 {
-  font-size: clamp(28px, 4vw, 44px);
-  line-height: 1.1;
-  color: #10253a;
-}
-
-.hero p {
+.message {
   font-size: 16px;
-  line-height: 1.8;
-  color: #334e68;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.primary,
-.secondary {
-  height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 1px solid transparent;
+  color: #365168;
   font-weight: 600;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-}
-
-.primary {
-  color: #ffffff;
-  background: #1d4e89;
-  box-shadow: 0 10px 24px #1d4e8930;
-}
-
-.secondary {
-  color: #1d4e89;
-  background: #eff6ff;
-  border-color: #bfdbfe;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .primary:hover,
-  .secondary:hover {
-    transform: translateY(-1px);
-  }
-
-  .primary:hover {
-    background: #163d6a;
-  }
-
-  .secondary:hover {
-    background: #dbeafe;
-  }
 }
 
 @media (max-width: 600px) {
-  .actions {
-    flex-direction: column;
-  }
-
-  .primary,
-  .secondary {
-    width: 100%;
+  .page {
+    padding: 24px 16px 40px;
   }
 }
