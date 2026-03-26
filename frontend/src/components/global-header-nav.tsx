@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/lib/api";
@@ -16,6 +16,17 @@ type AuthState = {
   loggedIn: boolean;
   isAdmin: boolean;
   userName: string | null;
+};
+
+const getDisplayUserName = (userName: string | null) => userName ?? "ユーザ";
+
+const getFocusableButtons = (
+  cancelButton: HTMLButtonElement | null,
+  confirmButton: HTMLButtonElement | null
+) => {
+  return [cancelButton, confirmButton].filter(
+    (element): element is HTMLButtonElement => element !== null && !element.disabled
+  );
 };
 
 const SERVER_AUTH_SNAPSHOT: AuthState = {
@@ -64,7 +75,14 @@ export default function GlobalHeaderNav() {
   const router = useRouter();
   const authState = useSyncExternalStore(subscribeAuth, getAuthSnapshot, getServerAuthSnapshot);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  const previousFocusedElementRef = useRef<HTMLElement | null>(null);
   const { loggedIn, isAdmin, userName } = authState;
+  const displayUserName = getDisplayUserName(userName);
+  const isUsersNewActive = pathname === "/users/new";
 
   const getNavLinkClassName = (href: string) => {
     return pathname === href ? `${styles.link} ${styles.active}` : styles.link;
@@ -75,31 +93,80 @@ export default function GlobalHeaderNav() {
   }, [router]);
 
   const onLogoutClick = useCallback(() => {
+    setIsSubmitting(false);
     setShowLogoutConfirm(true);
   }, []);
 
   const onCancelLogout = useCallback(() => {
+    if (isSubmitting) return;
     setShowLogoutConfirm(false);
-  }, []);
+  }, [isSubmitting]);
 
   const onConfirmLogout = useCallback(() => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     logout();
-    setShowLogoutConfirm(false);
     router.push("/login");
-  }, [router]);
+  }, [isSubmitting, router]);
+
+  useEffect(() => {
+    if (!showLogoutConfirm) {
+      previousFocusedElementRef.current?.focus();
+      previousFocusedElementRef.current = null;
+      return;
+    }
+
+    previousFocusedElementRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    cancelButtonRef.current?.focus();
+  }, [showLogoutConfirm]);
 
   useEffect(() => {
     if (!showLogoutConfirm) return;
+
+    const dialog = dialogRef.current;
+    if (!dialog) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         onCancelLogout();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = getFocusableButtons(cancelButtonRef.current, confirmButtonRef.current);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey) {
+        if (active === first || !dialog.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last || !dialog.contains(active)) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    dialog.addEventListener("keydown", handleKeyDown);
+    return () => dialog.removeEventListener("keydown", handleKeyDown);
   }, [showLogoutConfirm, onCancelLogout]);
 
   if (pathname === "/login") {
@@ -114,8 +181,8 @@ export default function GlobalHeaderNav() {
         </Link>
         <nav className={styles.nav} aria-label="global">
           {loggedIn && (
-            <span className={styles.userStatus} aria-label={`ログイン中ユーザー: ${userName ?? "ユーザ"}`}>
-              ログイン中: {userName ?? "ユーザ"}
+            <span className={styles.userStatus} aria-label={`ログイン中ユーザー: ${displayUserName}`}>
+              ログイン中: {displayUserName}
             </span>
           )}
           {NAV_ITEMS.map((item) => {
@@ -134,7 +201,7 @@ export default function GlobalHeaderNav() {
           {isAdmin && (
             <Link
               href="/users/new"
-              aria-current={pathname === "/users/new" ? "page" : undefined}
+              aria-current={isUsersNewActive ? "page" : undefined}
               className={getNavLinkClassName("/users/new")}
             >
               社員登録
@@ -154,21 +221,24 @@ export default function GlobalHeaderNav() {
       {showLogoutConfirm && (
         <div className={styles.modalOverlay} role="presentation" onClick={onCancelLogout}>
           <div
+            ref={dialogRef}
             className={styles.modal}
             role="dialog"
             aria-modal="true"
             aria-labelledby="logout-confirm-title"
             aria-describedby="logout-confirm-description"
+            aria-busy={isSubmitting}
+            tabIndex={-1}
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id="logout-confirm-title" className={styles.modalTitle}>ログアウトしますか？</h2>
             <p id="logout-confirm-description" className={styles.modalDescription}>未保存の入力内容は失われる可能性があります。</p>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.cancelButton} onClick={onCancelLogout}>
+              <button type="button" className={styles.cancelButton} onClick={onCancelLogout} disabled={isSubmitting} ref={cancelButtonRef}>
                 いいえ
               </button>
-              <button type="button" className={styles.confirmButton} onClick={onConfirmLogout}>
-                はい
+              <button type="button" className={styles.confirmButton} onClick={onConfirmLogout} disabled={isSubmitting} ref={confirmButtonRef}>
+                {isSubmitting ? "処理中..." : "はい"}
               </button>
             </div>
           </div>
