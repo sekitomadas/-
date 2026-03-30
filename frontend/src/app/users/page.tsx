@@ -28,6 +28,10 @@ export default function UsersPage() {
         const data = await getUsers();
         setUsers(data);
       } catch (err) {
+        if (err instanceof ApiClientError && err.status === 401) {
+          router.replace("/login");
+          return;
+        }
         if (err instanceof ApiClientError) {
           setError(err.message);
         } else {

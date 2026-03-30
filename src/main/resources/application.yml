@@ -9,11 +9,7 @@ spring:
 
 app:
   cors:
-    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
+    allowed-origin: ${OFFICE_NAVI_FRONTEND_ORIGIN}
   jwt:
-    secret: ${JWT_SECRET:officenavi-local-secret-key-for-hs256-token-signing}
-    expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}
-
-# server:
-#   servlet:
-#     context-path: /office-navi
+    secret: ${OFFICE_NAVI_JWT_SECRET}
+    expiration-seconds: ${OFFICE_NAVI_JWT_EXPIRATION_SECONDS}
