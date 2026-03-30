@@ -1,0 +1,131 @@
+.page {
+  min-height: 100%;
+  padding: clamp(16px, 4vw, 28px);
+  background:
+    radial-gradient(circle at 20% 20%, #dbeafe 0%, transparent 40%),
+    radial-gradient(circle at 80% 75%, #fde68a 0%, transparent 42%),
+    #f8fafc;
+}
+
+.main {
+  max-width: 760px;
+  margin: 0 auto;
+  border-radius: 18px;
+  border: 1px solid #d9e2ec;
+  background: #fff;
+  box-shadow: 0 20px 46px #00000010;
+  padding: clamp(18px, 3.5vw, 32px);
+  display: grid;
+  gap: 18px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kicker {
+  color: #486581;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.header h1 {
+  color: #102a43;
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.links {
+  display: flex;
+  gap: 8px;
+}
+
+.links a {
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  background: #f8fafc;
+  color: #334e68;
+  font-weight: 600;
+}
+
+.links button {
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  background: #f8fafc;
+  color: #334e68;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: #243b53;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.field input {
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  padding: 11px 12px;
+  font-size: 15px;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px #dbeafe;
+}
+
+.field small {
+  color: #b42318;
+}
+
+.error {
+  color: #b42318;
+  background: #fee4e2;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.form button {
+  margin-top: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: #1d4ed8;
+  color: #fff;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form button:disabled {
+  cursor: not-allowed;
+  background: #94a3b8;
+}
+
+@media (max-width: 680px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
