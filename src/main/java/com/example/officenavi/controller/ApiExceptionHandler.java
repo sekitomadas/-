@@ -1,5 +1,6 @@
 package com.example.officenavi.controller;
 
+import com.example.officenavi.exception.DuplicateSeatNameException;
 import com.example.officenavi.exception.AuthenticationFailedException;
 import com.example.officenavi.exception.ResourceNotFoundException;
 import com.example.officenavi.exception.SeatAlreadyInUseException;
@@ -130,5 +131,22 @@ public class ApiExceptionHandler {
         }
 
         return error;
+    }
+
+    /**
+     * 座席名重複エラーを処理します。
+     *
+     * @param ex 座席名重複例外
+     * @return 409レスポンス
+     */
+    @ExceptionHandler(DuplicateSeatNameException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateSeatName(DuplicateSeatNameException ex) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("code", "DUPLICATE_SEAT_NAME");
+        response.put("message", ex.getMessage());
+        response.put("details", List.of(Map.of(
+                "field", "name",
+                "reason", "既に使用されている座席名です")));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }

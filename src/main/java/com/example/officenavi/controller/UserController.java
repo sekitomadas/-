@@ -46,16 +46,16 @@ public class UserController {
     }
 
     /**
-        * 社員を登録します。
-        * リクエストは {@code @Valid} により検証され、入力不正時は400を返します。
+     * 社員を登録します。
+     * リクエストは {@code @Valid} により検証され、入力不正時は400を返します。
      *
      * @param request 社員登録リクエスト
-         * @return 201 Created（登録された社員情報）
+     * @return 201 Created（登録された社員情報）
      */
     @PostMapping("/users")
-        public ResponseEntity<UserRegisterResponse> registerUser(@Valid @RequestBody UserRegisterRequest request) {
-            UserRegisterResponse response = userService.registerUser(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<UserRegisterResponse> registerUser(@Valid @RequestBody UserRegisterRequest request) {
+        UserRegisterResponse response = userService.registerUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    
+
 }

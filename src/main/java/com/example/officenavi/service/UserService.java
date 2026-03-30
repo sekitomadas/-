@@ -4,7 +4,10 @@ import com.example.officenavi.domain.user.UserEntity;
 import com.example.officenavi.domain.user.UserRegisterRequest;
 import com.example.officenavi.domain.user.UserRegisterResponse;
 import com.example.officenavi.domain.user.UserResponse;
+import com.example.officenavi.exception.EmailAlreadyInUseException;
 import com.example.officenavi.repository.UserRepository;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +25,7 @@ public class UserService {
     /**
      * コンストラクタインジェクションでリポジトリを受け取ります。
      *
-     * @param userRepository 従業員リポジトリ
+     * @param userRepository  従業員リポジトリ
      * @param passwordEncoder パスワードエンコーダー
      */
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
@@ -53,17 +56,23 @@ public class UserService {
         UserEntity user = new UserEntity(
                 request.getName(),
                 request.getEmail(),
-                hashedPassword
-        );
+                hashedPassword);
 
-        UserEntity createdUser = userRepository.registerUser(user);
+        try {
+            UserEntity createdUser = userRepository.registerUser(user);
 
-        return new UserRegisterResponse(
-                createdUser.getId(),
-                createdUser.getName(),
-                createdUser.getEmail(),
-                createdUser.getCreatedAt()
-        );
+            return new UserRegisterResponse(
+                    createdUser.getId(),
+                    createdUser.getName(),
+                    createdUser.getEmail(),
+                    createdUser.getCreatedAt());
+        } catch (DataIntegrityViolationException e) {
+            if (e.getMessage().contains("users_email_key")) {
+                throw new EmailAlreadyInUseException(e.getMessage());
+            }
+            throw e;
+        }
+
     }
 
     /**
@@ -76,8 +85,7 @@ public class UserService {
         return new UserResponse(
                 userEntity.getId(),
                 userEntity.getName(),
-                userEntity.getEmail()
-        );
+                userEntity.getEmail());
     }
-    
+
 }

@@ -1,10 +1,11 @@
 package com.example.officenavi.service;
 
 import com.example.officenavi.domain.seat.SeatEntity;
+import com.example.officenavi.domain.seat.SeatRegisterRequest;
 import com.example.officenavi.domain.seat.SeatResponse;
 import com.example.officenavi.repository.SeatRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 /**
@@ -45,7 +46,26 @@ public class SeatService {
         return new SeatResponse(
                 seatEntity.getId(),
                 seatEntity.getName(),
-                seatEntity.getLocation()
-        );
+                seatEntity.getLocation());
+    }
+
+    /**
+     * 新しい座席を追加し、追加された座席情報をレスポンス形式で返します。
+     *
+     * @return 追加された座席レスポンス
+     */
+    public SeatResponse addSeat(SeatRegisterRequest request) {
+        SeatEntity newSeat = new SeatEntity(null, request.getName(), request.getLocation());
+        try {
+            SeatEntity addedSeat = seatRepository.addSeat(newSeat);
+            return toResponse(addedSeat);
+        } catch (DataIntegrityViolationException e) {
+            // 座席名重複の場合のみ独自例外に変換（他のケースは従来通り）
+            if (e.getMessage() != null && e.getMessage().contains("seats_name_key")) {
+                throw new com.example.officenavi.exception.DuplicateSeatNameException(
+                        "座席名（" + request.getName() + "）が既に登録されています");
+            }
+            throw e;
+        }
     }
 }
